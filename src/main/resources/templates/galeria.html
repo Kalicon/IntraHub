@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria de Fotos - IntraHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: rgba(37, 99, 235, 0.08);
+            --dark-bg: #090d16;
+            --dark-card: rgba(22, 30, 49, 0.7);
+            --dark-border: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.04) 0px, transparent 40%);
+            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #334155;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Ambient glows */
+        .dashboard-glow {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            filter: blur(140px);
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.12;
+        }
+        .glow-1 { top: -150px; left: 5%; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); }
+
+        .navbar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02) !important;
+        }
+        .navbar-brand {
+            color: var(--text-dark) !important;
+            font-weight: 700;
+        }
+
+        .card-album {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .card-album:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.1);
+        }
+        .album-capa {
+            height: 180px;
+            width: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .card-album:hover .album-capa {
+            transform: scale(1.03);
+        }
+        .foto-grid-item {
+            position: relative;
+            height: 180px;
+            cursor: pointer;
+            overflow: hidden;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            transition: transform 0.3s;
+        }
+        .foto-grid-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .foto-grid-item:hover .foto-grid-img {
+            transform: scale(1.03);
+        }
+        .btn-del-foto {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: none;
+        }
+        .foto-grid-item:hover .btn-del-foto {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 0.6rem 1.3rem;
+        }
+
+        /* Theme loading script support */
+        body.dark-mode {
+            background-color: var(--dark-bg);
+            background-image: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%);
+            color: #cbd5e1;
+        }
+        body.dark-mode .navbar {
+            background: rgba(15, 23, 42, 0.8) !important;
+            border-bottom-color: var(--dark-border);
+        }
+        body.dark-mode .navbar-brand {
+            color: #ffffff !important;
+        }
+        body.dark-mode .card-album, body.dark-mode .modal-content {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            color: #f1f5f9;
+        }
+        body.dark-mode .text-dark {
+            color: #ffffff !important;
+        }
+        body.dark-mode .text-secondary {
+            color: #94a3b8 !important;
+        }
+    </style>
+    <script>
+        // Load theme as soon as possible to avoid flash
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.classList.add('dark-mode');
+            });
+        }
+    </script>
+</head>
+<body class="pb-5">
+<div class="dashboard-glow glow-1"></div>
+
+<nav class="navbar mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="/"><i class="bi bi-arrow-left-circle me-2 fs-5"></i> Voltar para IntraHub</a>
+        <div class="fw-bold text-secondary">Galeria Social</div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-secondary fw-bold"><i class="bi bi-camera-reels me-2"></i>Álbuns de Fotos</h3>
+        <div sec:authorize="hasAnyRole('ADMIN', 'ESCALA')">
+            <button class="btn btn-primary" onclick="modalNovoAlbum.show()">+ Novo Álbum</button>
+        </div>
+    </div>
+
+    <div class="row g-4" id="lista-albuns">
+        <div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovoAlbum" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title">Criar Álbum</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="text" id="albumTitulo" class="form-control mb-3" placeholder="Título do Álbum">
+                <label class="small fw-bold">Foto de Capa</label>
+                <input type="file" id="albumCapaFile" class="form-control" onchange="lerFoto(this)">
+                <input type="hidden" id="albumCapaBase64">
+                <img id="previewCapa" style="width:100%; height:200px; object-fit:cover; display:none; margin-top:10px; border-radius:8px;">
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary w-100" onclick="salvarAlbum()">Salvar</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalVerAlbum" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-light">
+            <div class="modal-header border-0 shadow-sm bg-white">
+                <h4 class="modal-title fw-bold text-primary" id="tituloAlbumAberto">...</h4>
+                <div class="d-flex gap-2 align-items-center">
+                    <div sec:authorize="hasAnyRole('ADMIN', 'ESCALA')">
+                        <input type="file" id="novaFotoFile" class="d-none" multiple onchange="enviarFoto()">
+                        <button class="btn btn-outline-primary me-2" onclick="document.getElementById('novaFotoFile').click()">+ Adicionar Fotos</button>
+                        <button class="btn btn-outline-danger me-3" onclick="deletarAlbumAberto()"><i class="bi bi-trash"></i> Excluir Álbum</button>
+                    </div>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body scroll-box">
+                <input type="hidden" id="idAlbumAberto">
+                <div class="row g-3" id="grade-fotos"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCarrossel" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen bg-black">
+        <div class="modal-content bg-black">
+            <div class="modal-header border-0 bg-transparent position-absolute w-100" style="z-index:9999;">
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0 d-flex align-items-center justify-content-center">
+                <div id="carouselGaleria" class="carousel slide" style="width:100%;">
+                    <div class="carousel-inner" id="carousel-slides"></div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselGaleria" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselGaleria" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Variáveis Globais
+    let modalNovoAlbum, modalVerAlbum, modalCarrossel;
+    let usuarioPapel = 'USER'; // Será atualizado pelo fetch da sessão
+
+    window.onload = async () => {
+        modalNovoAlbum = new bootstrap.Modal(document.getElementById('modalNovoAlbum'));
+        modalVerAlbum = new bootstrap.Modal(document.getElementById('modalVerAlbum'));
+        modalCarrossel = new bootstrap.Modal(document.getElementById('modalCarrossel'));
+
+        await verificarSessao();
+        carregarAlbuns();
+    };
+
+    async function verificarSessao() {
+        try {
+            const r = await fetch('/sessao');
+            const d = await r.json();
+            if(d.logado === "true") usuarioPapel = d.papel.replace('ROLE_', '');
+        } catch(e) {}
+    }
+
+    async function carregarAlbuns() {
+        const div = document.getElementById('lista-albuns');
+        try {
+            const r = await fetch('/galeria/dados'); // Nova rota JSON
+            const lista = await r.json();
+
+            if(!lista || lista.length === 0) {
+                div.innerHTML = '<div class="col-12 text-center text-muted">Nenhum álbum encontrado.</div>';
+                return;
+            }
+
+            div.innerHTML = lista.map(a => `
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card card-album h-100" onclick="abrirAlbum(${a.id}, '${escapeJs(a.titulo)}')">
+                        <img src="${a.capa || 'https://via.placeholder.com/300'}" class="album-capa">
+                        <div class="card-body p-2">
+                            <h6 class="card-title text-center mb-0 fw-bold text-dark">${escapeHtml(a.titulo)}</h6>
+                            <p class="text-center text-muted small mb-0">${a.dataCriacao || ''}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            div.innerHTML = '<div class="col-12 text-center text-danger">Erro ao carregar galeria.</div>';
+        }
+    }
+
+    async function abrirAlbum(id, titulo) {
+        document.getElementById('idAlbumAberto').value = id;
+        document.getElementById('tituloAlbumAberto').innerText = titulo;
+        const grid = document.getElementById('grade-fotos');
+        grid.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
+        modalVerAlbum.show();
+
+        try {
+            const r = await fetch(`/galeria/${id}/fotos`);
+            const fotos = await r.json();
+
+            if(fotos.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5">Álbum vazio.</div>';
+                return;
+            }
+
+            const podeDeletar = (usuarioPapel === 'ADMIN' || usuarioPapel === 'ESCALA');
+
+            grid.innerHTML = fotos.map((f, i) => `
+                <div class="col-6 col-md-3">
+                    <div class="foto-grid-item">
+                        <img src="/galeria/foto/${f.id}" class="foto-grid-img" onclick="verCarrossel(${id}, ${i})">
+                        ${podeDeletar ? `<button class="btn-del-foto" onclick="deletarFoto(${f.id})"><i class="bi bi-trash"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            grid.innerHTML = '<div class="text-center text-danger">Erro ao carregar fotos.</div>';
+        }
+    }
+
+    async function salvarAlbum() {
+        const titulo = document.getElementById('albumTitulo').value;
+        const capa = document.getElementById('albumCapaBase64').value;
+        if(!titulo) return alert("Título obrigatório");
+
+        await fetch('/galeria', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({titulo, capa})
+        });
+
+        modalNovoAlbum.hide();
+        carregarAlbuns();
+    }
+
+    async function enviarFoto() {
+        const idAlbum = document.getElementById('idAlbumAberto').value;
+        const input = document.getElementById('novaFotoFile');
+        if(!input.files.length) return;
+
+        for(let i=0; i<input.files.length; i++) {
+            const fd = new FormData();
+            fd.append('file', input.files[i]);
+            await fetch(`/galeria/${idAlbum}/fotos`, {method:'POST', body:fd});
+        }
+        input.value = '';
+        abrirAlbum(idAlbum, document.getElementById('tituloAlbumAberto').innerText);
+    }
+
+    async function deletarFoto(id) {
+        if(!confirm("Excluir foto?")) return;
+        await fetch(`/galeria/foto/${id}`, {method:'DELETE'});
+        abrirAlbum(document.getElementById('idAlbumAberto').value, document.getElementById('tituloAlbumAberto').innerText);
+    }
+
+    async function deletarAlbumAberto() {
+        if(!confirm("Excluir álbum inteiro?")) return;
+        await fetch(`/galeria/${document.getElementById('idAlbumAberto').value}`, {method:'DELETE'});
+        modalVerAlbum.hide();
+        carregarAlbuns();
+    }
+
+    async function verCarrossel(idAlbum, index) {
+        const r = await fetch(`/galeria/${idAlbum}/fotos`);
+        const fotos = await r.json();
+        const slides = document.getElementById('carousel-slides');
+
+        slides.innerHTML = fotos.map((f, i) => `
+            <div class="carousel-item ${i === index ? 'active' : ''} h-100">
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <img src="/galeria/foto/${f.id}" style="max-height:90vh; max-width:100vw;">
+                </div>
+            </div>
+        `).join('');
+        modalCarrossel.show();
+    }
+
+    function lerFoto(input) {
+        if(input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('albumCapaBase64').value = e.target.result;
+                const img = document.getElementById('previewCapa');
+                img.src = e.target.result;
+                img.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function escapeHtml(text) { return text ? text.replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+    function escapeJs(text) { return text ? text.replace(/'/g, "\\'") : ''; }
+</script>
+</body>
+</html>

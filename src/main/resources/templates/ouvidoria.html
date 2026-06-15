@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canal de Ética & Ouvidoria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --dark-bg: #090d16;
+            --dark-card: rgba(22, 30, 49, 0.7);
+            --dark-border: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.04) 0px, transparent 40%);
+            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #334155;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Ambient glows */
+        .dashboard-glow {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            filter: blur(140px);
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.12;
+        }
+        .glow-1 { top: -150px; left: 5%; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(30, 58, 138, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .card-form {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .btn-enviar {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 40px;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+        }
+        .btn-enviar:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transform: translateY(-1px);
+            color: white;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+            border-color: #2563eb;
+        }
+        .admin-panel { display: none; }
+        .form-check-input:checked { background-color: #2563eb; border-color: #2563eb; }
+
+        /* Dark mode overrides */
+        body.dark-mode {
+            background-color: var(--dark-bg);
+            background-image: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%);
+            color: #cbd5e1;
+        }
+        body.dark-mode .hero-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-bottom-color: var(--dark-border);
+        }
+        body.dark-mode .card-form {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            color: #f1f5f9;
+        }
+        body.dark-mode .form-control, body.dark-mode .form-select {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: var(--dark-border);
+            color: #ffffff;
+        }
+        body.dark-mode .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+        body.dark-mode .table {
+            color: #cbd5e1;
+        }
+        body.dark-mode .table-light {
+            --bs-table-bg: rgba(255, 255, 255, 0.02) !important;
+            --bs-table-color: #ffffff !important;
+        }
+        body.dark-mode .modal-content {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            color: #ffffff;
+        }
+        body.dark-mode .bg-light {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            color: #ffffff !important;
+        }
+    </style>
+    <script>
+        // Load theme as soon as possible to avoid flash
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.classList.add('dark-mode');
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="dashboard-glow glow-1"></div>
+
+<div class="hero-section text-center">
+    <div class="container">
+        <h2 class="fw-bold"><i class="bi bi-shield-check me-2"></i>Canal de Ética e Ouvidoria</h2>
+        <p class="opacity-75 mb-0">Seu espaço seguro para denúncias, sugestões e elogios.</p>
+        <a href="/" class="btn btn-sm btn-outline-light mt-3 rounded-pill px-4"><i class="bi bi-arrow-left me-2"></i>Voltar para IntraHub</a>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-form p-4 mb-5">
+                <div class="card-body">
+                    <h5 class="card-title text-primary fw-bold mb-4">Novo Relato</h5>
+
+                    <form id="formOuvidoria" onsubmit="enviarRelato(event)">
+                        <div class="mb-3">
+                            <label class="fw-bold small text-muted">Tipo de Mensagem</label>
+                            <div class="d-flex gap-3 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tipo" id="tipo1" value="Denúncia" required>
+                                    <label class="form-check-label" for="tipo1">🚨 Denúncia</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tipo" id="tipo2" value="Elogio">
+                                    <label class="form-check-label" for="tipo2">⭐ Elogio</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tipo" id="tipo3" value="Sugestão" checked>
+                                    <label class="form-check-label" for="tipo3">💡 Sugestão</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch p-3 bg-light rounded">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" id="checkAnonimo" onchange="toggleIdentificacao()">
+                                <label class="form-check-label fw-bold" for="checkAnonimo">Desejo enviar anonimamente</label>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3" id="areaIdentificacao">
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-muted">Seu Nome</label>
+                                <input type="text" id="nome" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-muted">Seu Setor</label>
+                                <input type="text" id="setor" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-bold text-muted">Mensagem</label>
+                            <textarea id="mensagem" class="form-control" rows="5" placeholder="Descreva a situação com o máximo de detalhes possível..." required></textarea>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" id="btnEnviar" class="btn btn-enviar">Enviar Relato</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div sec:authorize="hasRole('ADMIN')" class="card card-form p-4 border-top border-5 border-danger">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-danger"><i class="bi bi-lock-fill me-2"></i>Área Restrita (RH/Diretoria)</h5>
+                    <button class="btn btn-sm btn-outline-danger" onclick="carregarRelatos()">Atualizar Lista</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover small align-middle">
+                        <thead class="table-light"><tr><th>Data</th><th>Tipo</th><th>Autor</th><th>Status</th><th>Ação</th></tr></thead>
+                        <tbody id="tabela-admin"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLer" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalhes</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p id="lerTexto" style="white-space: pre-wrap;"></p><hr><select id="lerStatus" class="form-select"><option value="Pendente">Pendente</option><option value="Em Análise">Em Análise</option><option value="Resolvido">Resolvido</option></select></div><div class="modal-footer"><button class="btn btn-primary w-100" onclick="salvarStatus()">Salvar Status</button></div></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let idSelecionado = null;
+
+    function toggleIdentificacao() {
+        const anonimo = document.getElementById('checkAnonimo').checked;
+        const area = document.getElementById('areaIdentificacao');
+        area.style.opacity = anonimo ? '0.3' : '1';
+        area.style.pointerEvents = anonimo ? 'none' : 'auto';
+        if(anonimo) { document.getElementById('nome').value = ''; document.getElementById('setor').value = ''; }
+    }
+
+    async function enviarRelato(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnEnviar');
+        btn.disabled = true; btn.innerText = 'Enviando...';
+
+        const payload = {
+            tipo: document.querySelector('input[name="tipo"]:checked').value,
+            anonimo: document.getElementById('checkAnonimo').checked,
+            nome: document.getElementById('nome').value,
+            setor: document.getElementById('setor').value,
+            mensagem: document.getElementById('mensagem').value
+        };
+
+        try {
+            const r = await fetch('/ouvidoria/api/enviar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (r.ok) {
+                alert('Recebemos seu relato com segurança. Obrigado!');
+                document.getElementById('formOuvidoria').reset();
+                toggleIdentificacao();
+                carregarRelatos(); // Atualiza se for admin vendo
+            } else {
+                alert('Erro ao enviar.');
+            }
+        } catch(err) { alert('Erro de conexão.'); }
+        finally { btn.disabled = false; btn.innerText = 'Enviar Relato'; }
+    }
+
+    // Funções Admin
+    async function carregarRelatos() {
+        const tb = document.getElementById('tabela-admin');
+        if(!tb) return; // Não é admin
+        try {
+            const r = await fetch('/ouvidoria/api/listar');
+            const l = await r.json();
+            tb.innerHTML = l.map(o => `
+                <tr style="cursor:pointer" onclick="lerDetalhes('${encodeURIComponent(JSON.stringify(o))}')">
+                    <td>${new Date(o.dataEnvio).toLocaleDateString()}</td>
+                    <td><span class="badge ${getBadge(o.tipo)}">${o.tipo}</span></td>
+                    <td>${o.anonimo ? '<i>Anônimo</i>' : o.nome}</td>
+                    <td>${o.status}</td>
+                    <td><i class="bi bi-eye"></i></td>
+                </tr>`).join('');
+        } catch(e) {}
+    }
+
+    function getBadge(tipo) {
+        if(tipo === 'Denúncia') return 'bg-danger';
+        if(tipo === 'Elogio') return 'bg-success';
+        return 'bg-warning text-dark';
+    }
+
+    function lerDetalhes(json) {
+        const o = JSON.parse(decodeURIComponent(json));
+        idSelecionado = o.id;
+        document.getElementById('lerTexto').innerText = o.mensagem;
+        document.getElementById('lerStatus').value = o.status;
+        new bootstrap.Modal(document.getElementById('modalLer')).show();
+    }
+
+    async function salvarStatus() {
+        const st = document.getElementById('lerStatus').value;
+        await fetch(`/ouvidoria/api/status/${idSelecionado}`, { method:'PUT', body: st });
+        location.reload();
+    }
+
+    // Carrega lista se for admin ao abrir
+    window.onload = carregarRelatos;
+</script>
+</body>
+</html>

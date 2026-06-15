@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almoxarifado - IntraHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: rgba(37, 99, 235, 0.08);
+            --dark-bg: #090d16;
+            --dark-card: rgba(22, 30, 49, 0.7);
+            --dark-border: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.04) 0px, transparent 40%);
+            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #334155;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Ambient glows */
+        .dashboard-glow {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            filter: blur(140px);
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.12;
+        }
+        .glow-1 { top: -150px; left: 20%; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); }
+
+        .sidebar {
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.01);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .nav-link {
+            color: #64748b;
+            font-weight: 500;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            padding: 10px 14px;
+            transition: all 0.2s;
+        }
+        .nav-link.active {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .nav-link:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.03);
+            color: var(--text-dark);
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.08);
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+        .product-icon {
+            height: 110px;
+            background: rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+        .badge-unid {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .carrinho-btn-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1050;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+        }
+        .carrinho-btn-float:hover {
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 12px 25px rgba(37, 99, 235, 0.45);
+        }
+        .badge-float {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(20%, -20%);
+            border: 2px solid #fff;
+            padding: 0.35em 0.65em;
+        }
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+        }
+
+        /* Dark mode overrides */
+        body.dark-mode {
+            background-color: var(--dark-bg);
+            background-image: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%);
+            color: #cbd5e1;
+        }
+        body.dark-mode .sidebar {
+            background: rgba(15, 23, 42, 0.8) !important;
+            border-right-color: var(--dark-border);
+        }
+        body.dark-mode .nav-link {
+            color: #94a3b8;
+        }
+        body.dark-mode .nav-link:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
+        }
+        body.dark-mode .product-card, body.dark-mode .modal-content, body.dark-mode .card {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            color: #f1f5f9;
+        }
+        body.dark-mode .product-icon {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom-color: var(--dark-border);
+        }
+        body.dark-mode .badge-unid {
+            background: rgba(30, 41, 59, 0.8);
+            color: #cbd5e1;
+            border-color: var(--dark-border);
+        }
+        body.dark-mode .text-dark {
+            color: #ffffff !important;
+        }
+        body.dark-mode .text-muted {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode .card-header {
+            background-color: rgba(0, 0, 0, 0.2) !important;
+            border-bottom-color: var(--dark-border) !important;
+            color: #ffffff !important;
+        }
+        body.dark-mode .list-group-item {
+            background-color: transparent !important;
+            border-color: var(--dark-border) !important;
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .form-control, body.dark-mode .form-select {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: var(--dark-border);
+            color: #ffffff;
+        }
+        body.dark-mode .form-control:focus, body.dark-mode .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+    </style>
+    <script>
+        // Load theme as soon as possible to avoid flash
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.classList.add('dark-mode');
+            });
+        }
+    </script>
+</head>
+<body class="pb-5">
+<div class="dashboard-glow glow-1"></div>
+
+<div class="d-flex">
+    <div class="d-flex flex-column flex-shrink-0 p-3 sidebar d-none d-md-block" style="width: 260px;">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2 text-secondary"></i>
+            <span class="fs-5 fw-bold">Almoxarifado</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item"><a href="#" class="nav-link active" onclick="filtrarCat('todos', this)"><i class="bi bi-grid me-2"></i> Todos</a></li>
+            <li><a href="#" class="nav-link" onclick="filtrarCat('Escritório', this)"><i class="bi bi-pen me-2"></i> Escritório</a></li>
+            <li><a href="#" class="nav-link" onclick="filtrarCat('Limpeza', this)"><i class="bi bi-stars me-2"></i> Limpeza</a></li>
+            <li><a href="#" class="nav-link" onclick="filtrarCat('Médico', this)"><i class="bi bi-heart-pulse me-2"></i> Médico</a></li>
+            <li><a href="#" class="nav-link" onclick="filtrarCat('TI', this)"><i class="bi bi-pc-display me-2"></i> Informática</a></li>
+        </ul>
+        <div sec:authorize="hasRole('ADMIN')" class="mt-4 p-3 bg-light rounded border">
+            <h6 class="small fw-bold text-muted text-uppercase mb-2">Administração</h6>
+            <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="modalNovoItem.show()">+ Novo Item</button>
+            <button class="btn btn-outline-danger btn-sm w-100" onclick="toggleSistema()">🛑 ON/OFF</button>
+        </div>
+    </div>
+
+    <div class="container-fluid p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 d-md-none">
+            <a href="/" class="btn btn-light shadow-sm border"><i class="bi bi-arrow-left"></i></a>
+            <h5 class="fw-bold mb-0">Almoxarifado</h5>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="position-relative w-50">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" id="buscaItem" class="form-control rounded-pill ps-5 border-0 shadow-sm" placeholder="O que você precisa hoje?" onkeyup="filtrarTexto()">
+                    </div>
+                    <div class="text-muted small"><span id="total-itens">0</span> itens encontrados</div>
+                </div>
+
+                <div id="grid-produtos" class="row g-3">
+                    <div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white py-3 fw-bold border-bottom-0">
+                        <i class="bi bi-clock-history me-2 text-primary"></i> Últimos Pedidos
+                    </div>
+                    <div class="card-body p-0 overflow-auto" style="max-height: 80vh;">
+                        <ul class="list-group list-group-flush small" id="lista-pedidos"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button class="btn btn-primary carrinho-btn-float" onclick="abrirCarrinho()">
+    <i class="bi bi-cart3"></i>
+    <span class="badge bg-danger badge-float shadow-sm" id="contador-carrinho">0</span>
+</button>
+
+<div class="modal fade" id="modalCarrinho" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="bi bi-cart-check me-2"></i>Revisar Pedido</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-light"><div class="card border-0 shadow-sm mb-3"><div class="card-body p-0"><ul class="list-group list-group-flush" id="itens-carrinho"></ul></div></div><h6 class="fw-bold mb-2 ps-1">Dados para Entrega</h6><input type="text" id="solicitante" class="form-control mb-2" placeholder="Seu Nome Completo"><input type="text" id="setor" class="form-control mb-3" placeholder="Seu Setor/Sala"></div><div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary px-4 fw-bold" onclick="finalizarPedido()">Confirmar Solicitação</button></div></div></div></div>
+
+<div class="modal fade" id="modalNovoItem" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Cadastrar Material</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="novoNomeMat" class="form-control mb-2" placeholder="Nome do Item"><input type="text" id="novoUnidMat" class="form-control mb-2" placeholder="Unidade (Ex: Cx, Resma, Un)"><label class="small text-muted mb-1">Categoria (opcional)</label><select id="novoCatMat" class="form-select"><option value="Escritório">Escritório</option><option value="Limpeza">Limpeza</option><option value="Médico">Médico</option><option value="TI">Informática</option></select></div><div class="modal-footer"><button class="btn btn-success w-100" onclick="salvarMaterial()">Salvar</button></div></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let carrinho = [];
+    let todosMateriais = [];
+    const modalCarrinho = new bootstrap.Modal(document.getElementById('modalCarrinho'));
+    const modalNovoItem = new bootstrap.Modal(document.getElementById('modalNovoItem'));
+
+    window.onload = () => { carregarMateriais(); carregarPedidos(); };
+
+    async function carregarMateriais() {
+        try {
+            const r = await fetch('/almoxarifado/api/materiais');
+            todosMateriais = await r.json();
+            renderizarGrid(todosMateriais);
+        } catch(e) { console.error(e); }
+    }
+
+    function renderizarGrid(lista) {
+        const container = document.getElementById('grid-produtos');
+        document.getElementById('total-itens').innerText = lista.length;
+
+        if(lista.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted py-5">Nenhum item encontrado.</div>';
+            return;
+        }
+
+        container.innerHTML = lista.map(m => `
+            <div class="col-6 col-md-4 col-xl-3">
+                <div class="product-card h-100 d-flex flex-column">
+                    <div class="badge-unid">${m.unidade}</div>
+                    <div class="product-icon">
+                        <i class="bi ${getIconePorCategoria(m.nome)}"></i>
+                    </div>
+                    <div class="p-3 flex-grow-1 d-flex flex-column">
+                        <h6 class="fw-bold text-dark mb-1 text-truncate" title="${m.nome}">${m.nome}</h6>
+                        <small class="text-muted mb-3 d-block">${m.unidade}</small>
+                        <button class="btn btn-sm btn-outline-primary w-100 mt-auto rounded-pill fw-bold" onclick="addCarrinho('${m.nome}')">
+                            Adicionar
+                        </button>
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    function getIconePorCategoria(nome) {
+        const n = nome.toLowerCase();
+        if(n.includes('papel') || n.includes('caneta') || n.includes('grampo')) return 'bi-file-text';
+        if(n.includes('limpeza') || n.includes('sabao') || n.includes('papel toalha')) return 'bi-stars';
+        if(n.includes('mouse') || n.includes('teclado') || n.includes('cabo')) return 'bi-mouse';
+        if(n.includes('luva') || n.includes('mascara') || n.includes('seringa')) return 'bi-heart-pulse';
+        return 'bi-box-seam';
+    }
+
+    function addCarrinho(nome) {
+        carrinho.push(nome);
+        atualizarContador();
+        // Efeito visual de feedback
+        const btnFloat = document.querySelector('.carrinho-btn-float');
+        btnFloat.classList.add('bg-success');
+        setTimeout(() => btnFloat.classList.remove('bg-success'), 200);
+    }
+
+    function atualizarContador() {
+        document.getElementById('contador-carrinho').innerText = carrinho.length;
+    }
+
+    function abrirCarrinho() {
+        const lista = document.getElementById('itens-carrinho');
+        if(carrinho.length === 0) {
+            lista.innerHTML = '<li class="list-group-item text-center text-muted py-4">Seu carrinho está vazio.</li>';
+        } else {
+            const counts = {}; carrinho.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
+            lista.innerHTML = Object.keys(counts).map(k => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>${k}</span>
+                    <span class="badge bg-primary rounded-pill">x${counts[k]}</span>
+                </li>`).join('');
+        }
+        modalCarrinho.show();
+    }
+
+    async function finalizarPedido() {
+        if(carrinho.length===0) return;
+        const solicitante = document.getElementById('solicitante').value;
+        const setor = document.getElementById('setor').value;
+
+        if(!solicitante || !setor) return alert("Por favor, preencha seu nome e setor.");
+
+        const counts = {}; carrinho.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
+        const listaTexto = Object.keys(counts).map(k => `${counts[k]}x ${k}`).join(', ');
+
+        const p = { solicitante, setor, listaItens: listaTexto };
+
+        await fetch('/almoxarifado/api/pedidos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) });
+
+        alert("Pedido enviado com sucesso!");
+        carrinho = []; atualizarContador();
+        modalCarrinho.hide(); carregarPedidos();
+    }
+
+    async function carregarPedidos() {
+        const r = await fetch('/almoxarifado/api/pedidos');
+        const l = await r.json();
+        document.getElementById('lista-pedidos').innerHTML = l.map(p => `
+            <li class="list-group-item px-3 py-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold" style="font-size:0.85rem">${p.solicitante}</span>
+                    <span class="badge ${p.status==='Entregue'?'bg-success':'bg-warning text-dark'}">${p.status}</span>
+                </div>
+                <div class="small text-muted lh-sm text-truncate">${p.listaItens}</div>
+                ${p.status!=='Entregue' ? `<div class="text-end mt-1"><button class="btn btn-sm btn-link p-0 text-decoration-none" style="font-size:0.75rem" onclick="concluirPedido(${p.id})">Marcar Entregue</button></div>` : ''}
+            </li>`).join('');
+    }
+
+    async function concluirPedido(id) { await fetch(`/almoxarifado/api/pedidos/${id}/concluir`, {method:'PUT'}); carregarPedidos(); }
+
+    // Funções Admin
+    async function salvarMaterial() {
+        // Nota: O backend atual espera 'nome' e 'unidade'. Se quiser salvar categoria, precisa atualizar o Model Java.
+        // Aqui mandamos só o básico para não quebrar.
+        await fetch('/almoxarifado/api/materiais', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({nome:document.getElementById('novoNomeMat').value, unidade:document.getElementById('novoUnidMat').value}) });
+        modalNovoItem.hide(); carregarMateriais();
+    }
+    async function toggleSistema() { await fetch('/almoxarifado/api/toggle', {method:'POST'}); alert("Status do sistema alterado."); }
+
+    // Filtros
+    function filtrarTexto() {
+        const t = document.getElementById('buscaItem').value.toLowerCase();
+        const filtrados = todosMateriais.filter(m => m.nome.toLowerCase().includes(t));
+        renderizarGrid(filtrados);
+    }
+
+    function filtrarCat(cat, el) {
+        document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+        el.classList.add('active');
+        if(cat === 'todos') { renderizarGrid(todosMateriais); return; }
+
+        // Simulação de filtro por categoria (baseado no nome ou se tiver campo categoria no futuro)
+        // Como o backend atual não tem categoria no objeto, fazemos um filtro inteligente pelo nome
+        let keywords = [];
+        if(cat === 'Escritório') keywords = ['papel', 'caneta', 'grampo', 'pasta', 'envelope'];
+        if(cat === 'Limpeza') keywords = ['sabao', 'limpeza', 'papel toalha', 'alcool'];
+        if(cat === 'Médico') keywords = ['luva', 'mascara', 'seringa', 'gaze'];
+        if(cat === 'TI') keywords = ['mouse', 'teclado', 'cabo', 'pilha'];
+
+        const filtrados = todosMateriais.filter(m => keywords.some(k => m.nome.toLowerCase().includes(k)));
+        renderizarGrid(filtrados);
+    }
+</script>
+</body>
+</html>

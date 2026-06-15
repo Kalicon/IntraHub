@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntraHub</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: rgba(37, 99, 235, 0.08);
+            --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            --success: #10b981;
+            --success-light: rgba(16, 185, 129, 0.08);
+            --info: #06b6d4;
+            --info-light: rgba(6, 182, 212, 0.08);
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.08);
+            --danger: #ef4444;
+            --danger-light: rgba(239, 68, 68, 0.08);
+            --indigo: #6366f1;
+            --indigo-light: rgba(99, 102, 241, 0.08);
+            --card-shadow: 0 4px 30px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05);
+            --radius-default: 20px;
+            --btn-radius: 12px;
+            --dark-bg: #090d16;
+            --dark-card: rgba(22, 30, 49, 0.7);
+            --dark-border: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.04) 0px, transparent 40%),
+                radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.04) 0px, transparent 50%);
+            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #334155;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.1px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Ambient glows for the dashboard */
+        .dashboard-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            filter: blur(140px);
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 50%;
+            opacity: 0.12;
+            transition: opacity 0.3s ease;
+        }
+        .glow-1 {
+            top: -150px;
+            left: 10%;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+        }
+        .glow-2 {
+            top: 350px;
+            right: 5%;
+            background: radial-gradient(circle, var(--indigo) 0%, transparent 70%);
+        }
+
+        .navbar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02) !important;
+        }
+        .navbar-brand span {
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            font-size: 1.3rem;
+            color: var(--text-dark) !important;
+        }
+        .navbar-logo {
+            height: 38px;
+            width: auto;
+            background: white;
+            padding: 3px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .navbar .btn-outline-light, .navbar .btn-link {
+            color: #475569 !important; /* slate-600 */
+            border: 1px solid transparent !important;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        .navbar .btn-outline-light:hover, .navbar .btn-link:hover {
+            color: var(--primary) !important;
+            background-color: var(--primary-light) !important;
+            border-radius: 10px;
+        }
+        .navbar .dropdown-toggle::after {
+            color: #475569;
+        }
+        .navbar .vr {
+            background-color: #cbd5e1 !important;
+            opacity: 0.8 !important;
+            height: 20px;
+            align-self: center;
+        }
+        .navbar .text-white {
+            color: var(--text-dark) !important;
+        }
+        .navbar .opacity-75 {
+            color: #64748b !important;
+            opacity: 0.9 !important;
+        }
+
+        .card-content {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-default);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s;
+            overflow: hidden;
+            height: 100%;
+        }
+        .card-content:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.08);
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+
+        .card-header-clean {
+            background: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 20px 24px;
+            font-weight: 750;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.98rem;
+            letter-spacing: -0.2px;
+        }
+
+        .btn {
+            border-radius: var(--btn-radius);
+            font-weight: 600;
+            padding: 0.6rem 1.3rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.1px;
+            font-size: 0.875rem;
+        }
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+            color: white;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+        }
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+            color: white;
+        }
+
+        .border-top-success { border-top: 4px solid var(--success) !important; }
+        .border-top-primary { border-top: 4px solid var(--primary) !important; }
+        .border-top-warning { border-top: 4px solid var(--warning) !important; }
+        .border-top-danger { border-top: 4px solid var(--danger) !important; }
+        .border-top-info { border-top: 4px solid var(--info) !important; }
+        .border-top-secondary { border-top: 4px solid #64748b !important; }
+        .border-top-indigo { border-top: 4px solid var(--indigo) !important; }
+
+        .menu-scroll-container, #lista-zap {
+            display: flex;
+            overflow-x: auto;
+            gap: 18px;
+            padding: 10px 2px;
+            scrollbar-width: thin;
+        }
+
+        .menu-card-horizontal {
+            min-width: 260px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 18px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+            transition: all 0.25s ease;
+        }
+        .menu-card-horizontal:hover {
+            transform: translateY(-3px);
+            border-color: var(--success);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.08);
+        }
+
+        .btn-quick-link {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: #475569;
+            font-weight: 600;
+            padding: 15px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            font-size: 0.88rem;
+            height: 100%;
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .btn-quick-link:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+        }
+
+        .card-evento {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #ffffff;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+            transition: border-color 0.25s, transform 0.25s;
+        }
+        .card-evento:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04);
+        }
+        .evento-img-wrapper {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+        }
+        .evento-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+            cursor: zoom-in;
+        }
+        .card-evento:hover .evento-img {
+            transform: scale(1.04);
+        }
+
+        .table-ramais thead th {
+            background-color: rgba(0, 0, 0, 0.02);
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.8px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+            padding: 16px 20px;
+        }
+        .table-ramais tbody td {
+            padding: 16px 20px;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        .avatar-small {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+        }
+
+        .card-album {
+            width: 180px;
+            min-width: 180px;
+            height: 220px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-album:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
+        }
+        .album-capa {
+            width: 100%;
+            height: 135px;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .card-album:hover .album-capa {
+            transform: scale(1.04);
+        }
+        .album-titulo {
+            padding: 12px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-align: center;
+            color: var(--text-dark);
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-dash {
+            border: none;
+            border-radius: var(--radius-default);
+            min-height: 100px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.02);
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        }
+
+        /* Modern thin scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Toast Container */
+        .toast-container {
+            z-index: 2000 !important;
+        }
+
+        /* DARK MODE FACELIFT */
+        body.dark-mode {
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 40%),
+                radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+            color: #cbd5e1;
+        }
+        body.dark-mode .navbar {
+            background: rgba(15, 23, 42, 0.8) !important;
+            border-bottom-color: var(--dark-border);
+        }
+        body.dark-mode .navbar-brand span {
+            color: #ffffff !important;
+        }
+        body.dark-mode .navbar .btn-outline-light, body.dark-mode .navbar .btn-link {
+            color: #cbd5e1 !important;
+        }
+        body.dark-mode .navbar .btn-outline-light:hover, body.dark-mode .navbar .btn-link:hover {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        body.dark-mode .navbar .dropdown-toggle::after {
+            color: #cbd5e1;
+        }
+        body.dark-mode .navbar .vr {
+            background-color: var(--dark-border) !important;
+        }
+        body.dark-mode .navbar .text-white {
+            color: #ffffff !important;
+        }
+        body.dark-mode .card-content, 
+        body.dark-mode .modal-content, 
+        body.dark-mode .card-evento, 
+        body.dark-mode .menu-card-horizontal, 
+        body.dark-mode .card-album {
+            background-color: var(--dark-card) !important;
+            border-color: var(--dark-border) !important;
+            color: #f1f5f9;
+        }
+        body.dark-mode .card-header-clean {
+            background-color: transparent;
+            border-bottom-color: var(--dark-border);
+            color: #ffffff;
+        }
+        body.dark-mode .btn-quick-link {
+            background-color: rgba(30, 41, 59, 0.4);
+            border-color: var(--dark-border);
+            color: #cbd5e1;
+        }
+        body.dark-mode .btn-quick-link:hover {
+            border-color: var(--primary);
+            background-color: rgba(30, 41, 59, 0.8);
+            color: #ffffff;
+        }
+        body.dark-mode .bg-white {
+            background-color: rgba(22, 30, 49, 0.6) !important;
+            color: #ffffff;
+        }
+        body.dark-mode .bg-light,
+        body.dark-mode .bg-light-subtle {
+            background-color: rgba(30, 41, 59, 0.3) !important;
+            color: #cbd5e1;
+        }
+        body.dark-mode .text-dark {
+            color: #ffffff !important;
+        }
+        body.dark-mode .form-control {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: var(--dark-border);
+            color: #ffffff;
+        }
+        body.dark-mode .table-ramais thead th {
+            background-color: rgba(30, 41, 59, 0.6);
+            color: #94a3b8;
+            border-bottom-color: var(--dark-border);
+        }
+        body.dark-mode .table {
+            color: #e2e8f0;
+        }
+        body.dark-mode .album-titulo {
+            color: #ffffff;
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.classList.add('dark-mode');
+            });
+        }
+    </script>
+</head>
+<body class="pb-5">
+<div class="dashboard-glow glow-1"></div>
+<div class="dashboard-glow glow-2"></div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer" style="z-index: 1090"></div>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <img src="/logo.png" alt="IntraHub Logo" class="me-2" style="width: 38px; height: 38px; object-fit: contain; border-radius: 8px;">
+            <span>IntraHub</span>
+        </a>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-light border-0 rounded-circle" onclick="toggleTheme()" title="Modo Escuro"><i class="bi bi-moon-stars-fill"></i></button>
+            <div class="vr text-white opacity-50 mx-2"></div>
+            <a href="/ouvidoria" class="btn btn-sm btn-outline-light border-0 rounded-pill px-3" title="Canal de Ética"><i class="bi bi-shield-lock-fill me-1"></i> Ouvidoria</a>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light border-0 rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-grid-3x3-gap-fill me-1"></i> Serviços</button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                    <li><h6 class="dropdown-header text-uppercase small fw-bold">Operacional</h6></li>
+                    <li><a class="dropdown-item small" href="/almoxarifado"><i class="bi bi-box-seam me-2 text-primary"></i> Almoxarifado</a></li>
+                    <li><button class="dropdown-item small" onclick="modalFrota.show(); carregarFrota();"><i class="bi bi-car-front-fill me-2 text-success"></i> Frota & Veículos</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header text-uppercase small fw-bold">Utilidade</h6></li>
+                    <li><button class="dropdown-item small" onclick="modalAchados.show(); carregarAchados();"><i class="bi bi-search me-2 text-warning"></i> Achados e Perdidos</button></li>
+                </ul>
+            </div>
+            <button class="btn btn-sm btn-warning fw-bold shadow-sm rounded-pill px-3" onclick="abrirModalChamado()">+ TI</button>
+            <button class="btn btn-sm btn-danger fw-bold shadow-sm rounded-pill px-3" onclick="modalManutencao.show()">+ Manut</button>
+            <div class="vr text-white opacity-50 mx-2"></div>
+            <div sec:authorize="!isAuthenticated()"><a href="/login" class="btn btn-sm btn-light text-primary fw-bold shadow-sm rounded-pill px-4">Login</a></div>
+            <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-3">
+                <div class="text-end text-white lh-1 d-none d-md-block"><div class="small opacity-75" style="font-size: 0.7rem;">Bem-vindo,</div><div class="fw-bold" sec:authentication="name" style="font-size: 0.9rem;">Usuário</div></div>
+                <div class="dropdown">
+                    <button class="btn btn-link text-white p-0 border-0" data-bs-toggle="dropdown"><i class="bi bi-person-circle fs-4"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><button class="dropdown-item small" onclick="abrirModalPerfil()"><i class="bi bi-person-bounding-box me-2"></i>Meu Perfil</button></li>
+                        <li sec:authorize="hasRole('ADMIN')"><button class="dropdown-item small" onclick="modalAudit.show(); carregarAuditoria();"><i class="bi bi-eye-fill me-2 text-danger"></i> Auditoria & Logs</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li sec:authorize="hasRole('ADMIN')"><button class="dropdown-item small" onclick="abrirGestaoUsuarios()"><i class="bi bi-people me-2"></i>Usuários</button></li>
+                        <li sec:authorize="hasRole('ADMIN')"><button class="dropdown-item small" onclick="modalSalas.show(); carregarSalasGerencia();"><i class="bi bi-door-open me-2"></i>Salas</button></li>
+                        <li sec:authorize="hasRole('ADMIN')"><button class="dropdown-item small" onclick="modalSetores.show(); carregarSetoresGerencia();"><i class="bi bi-gear me-2"></i>Setores</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><form th:action="@{/logout}" method="post" class="m-0"><button type="submit" class="dropdown-item small text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sair</button></form></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-content border-top-success">
+                <div class="card-header-clean text-success"><span class="d-flex align-items-center"><i class="bi bi-basket3-fill me-2 fs-5"></i> Cardápio da Semana</span></div>
+                <div class="card-body bg-white rounded-bottom p-3">
+                    <div class="menu-scroll-container" id="lista-cardapio"><div class="text-center w-100 text-muted">Carregando...</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card card-content border-0 h-100">
+                <div class="card-header-clean text-info">
+                    <span class="d-flex align-items-center"><i class="bi bi-calendar-check-fill me-2 fs-5"></i> Destaques & Eventos</span>
+                    <div sec:authorize="hasRole('ADMIN')"><button class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEvento">+ Novo</button></div>
+                </div>
+                <div class="card-body bg-light rounded-bottom p-3"><div id="lista-eventos" class="d-flex flex-column gap-3"></div></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-content border-top-primary h-100">
+                <div class="card-header-clean text-primary"><span class="d-flex align-items-center"><i class="bi bi-megaphone-fill me-2 fs-5"></i> Mural de Avisos</span></div>
+                <div class="card-body bg-light-subtle d-flex flex-column">
+                    <div class="input-group mb-3 shadow-sm" sec:authorize="isAuthenticated()">
+                        <input type="text" id="novoAvisoTitulo" class="form-control form-control-sm border-0" placeholder="Aviso rápido...">
+                        <button class="btn btn-primary btn-sm px-3" onclick="postarAviso()"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                    <div id="lista-avisos" class="d-flex flex-column gap-2 scroll-box flex-grow-1 p-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card card-content p-4 h-100 border-top-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-secondary mb-0 small text-uppercase"><i class="bi bi-grid-fill me-2"></i> Acesso Rápido</h6>
+                    <div id="btn-add-link-area"></div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6"><a href="/arquivos/ponto.rar" class="btn-quick-link border-danger text-danger"><i class="bi bi-clock-history fs-5"></i> Ponto</a></div>
+                    <div class="col-6"><a href="https://www.sou.sp.gov.br/sou.sp" target="_blank" class="btn-quick-link border-success text-success"><i class="bi bi-coin fs-5"></i> Holerite</a></div>
+                    <div id="lista-links-uteis" class="row g-2 w-100 m-0 p-0"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-content border-top-warning h-100">
+                <div class="card-header-clean text-warning py-2">
+                    <span class="text-dark small fw-bold"><i class="bi bi-pc-display-horizontal me-2 fs-5"></i> Chamados TI</span>
+                    <button class="btn btn-warning btn-sm fw-bold shadow-sm py-0 rounded-pill px-3" onclick="abrirModalChamado()">+ Abrir</button>
+                </div>
+                <div class="bg-warning bg-opacity-10 text-center text-dark small py-2 px-1 border-bottom border-warning-subtle rounded-1 mx-2 mb-2" style="font-size: 0.75rem;">
+                    <div class="mb-1"><i class="bi bi-telephone-forward-fill me-1"></i> Ramal: <strong>2020</strong></div>
+                </div>
+                <div class="card-body bg-light scroll-box p-2 rounded mx-2 mb-2"><div id="lista-chamados" class="d-flex flex-column gap-2"></div></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-content border-top-danger h-100">
+                <div class="card-header-clean text-danger py-2">
+                    <span class="text-dark small fw-bold"><i class="bi bi-tools me-2 fs-5"></i> Manutenção</span>
+                    <button class="btn btn-danger btn-sm fw-bold shadow-sm py-0 rounded-pill px-3" onclick="modalManutencao.show()">+ Abrir</button>
+                </div>
+                <div class="bg-danger bg-opacity-10 text-center text-dark small py-1 border-bottom border-danger-subtle rounded-1 mx-2 mb-2" style="font-size: 0.75rem;">
+                    <div class="mb-1"><i class="bi bi-telephone-inbound-fill me-1"></i> Urgência? Ligue: <strong>2030</strong></div>
+                </div>
+                <div class="card-body bg-light scroll-box p-2 rounded mx-2 mb-2"><div id="lista-manutencao" class="d-flex flex-column gap-2"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card card-content h-100 shadow-sm">
+                <div class="card-header-clean d-flex flex-wrap gap-2 align-items-center bg-white rounded-top">
+                    <span class="text-primary fw-bold"><i class="bi bi-people-fill me-2 fs-5"></i> Ramais</span>
+                    <div class="flex-grow-1 ms-3 position-relative">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" id="inputBusca" class="form-control form-control-sm rounded-pill ps-5 bg-light border-0" placeholder="Pesquisar..." onkeyup="filtrarTabela()">
+                    </div>
+                    <div sec:authorize="hasRole('ADMIN')"><button class="btn btn-sm btn-primary rounded-pill px-3" onclick="abrirModalCadastro()">+ Novo</button></div>
+                </div>
+                <div class="card-body p-0 table-responsive" style="max-height: 400px;">
+                    <table class="table table-ramais table-hover mb-0 small align-middle w-100">
+                        <thead class="sticky-top"><tr><th class="ps-4">Colaborador</th><th>Ramal</th><th>Setor</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <tbody id="tabela-corpo"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-content border-top-secondary h-100">
+                <div class="card-header-clean py-2 px-3"><span class="small fw-bold text-secondary"><i class="bi bi-calendar-range me-2"></i> Reservas de Sala</span><button class="btn btn-sm btn-outline-secondary py-0 rounded-pill" onclick="abrirModalReserva()">Agendar</button></div>
+                <div class="card-body scroll-box p-2"><ul class="list-group list-group-flush bg-transparent small" id="lista-reservas"></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card card-content border-top-indigo">
+                <div class="card-header-clean text-dark d-flex justify-content-between align-items-center">
+                    <span class="text-indigo fw-bold"><i class="bi bi-calendar-week me-2 fs-5"></i> Escala de Plantão</span>
+                    <div class="d-flex gap-2 align-items-center">
+                        <div sec:authorize="hasAnyRole('ADMIN', 'ESCALA')" class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-indigo border-0" onclick="replicarEscala()" title="Repetir 7 Dias"><i class="bi bi-arrow-repeat"></i></button>
+                            <button class="btn btn-sm btn-indigo px-3 rounded-pill" onclick="salvarEscalaDia()"><i class="bi bi-save me-1"></i> Salvar</button>
+                        </div>
+                        <div class="vr mx-2"></div>
+                        <span id="data-hoje-display" class="badge bg-light text-dark border align-self-center px-3 py-2 rounded-pill">Hoje</span>
+                    </div>
+                </div>
+                <div class="card-body bg-light-subtle">
+                    <ul class="nav nav-pills mb-3 gap-2 justify-content-center justify-content-md-start" id="escalaTabs" role="tablist"></ul>
+
+                    <div class="card p-4 shadow-sm border-0 rounded-4">
+                        <div id="loading-escala" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+                        <div id="conteudo-escala" style="display:none;">
+                            <input type="hidden" id="escalaId">
+
+                            <ul class="nav nav-tabs nav-fill mb-3 border-bottom-0" id="subTabsEscala" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active fw-bold small text-primary" id="tab-med-btn" data-bs-toggle="tab" data-bs-target="#tab-med-content" type="button" role="tab">
+                                        <i class="bi bi-heart-pulse-fill me-2"></i>Equipe Médica
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link fw-bold small text-success" id="tab-enf-btn" data-bs-toggle="tab" data-bs-target="#tab-enf-content" type="button" role="tab">
+                                        <i class="bi bi-bandaid-fill me-2"></i>Enfermagem
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="subTabsEscalaContent">
+                                <div class="tab-pane fade show active" id="tab-med-content" role="tabpanel">
+                                    <div class="table-responsive border rounded bg-white">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="table-primary text-primary">
+                                            <tr>
+                                                <th style="width: 35%;">Setor / Especialidade</th>
+                                                <th>Médico(a)</th>
+                                                <th style="width: 100px;">Ramal</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="tabela-escala-med"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-enf-content" role="tabpanel">
+                                    <div class="table-responsive border rounded bg-white">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead class="table-success text-success">
+                                            <tr>
+                                                <th style="width: 35%;">Setor</th>
+                                                <th>Enfermeiro(a) / Técnico(a)</th>
+                                                <th style="width: 100px;">Ramal</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="tabela-escala-enf"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card card-content border-top-info h-100">
+                <div class="card-header-clean text-secondary d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-folder2-open text-warning me-2 fs-5"></i> Wiki & Documentos</span>
+                    <div class="d-flex gap-2">
+                        <input type="text" id="buscaWiki" class="form-control form-control-sm rounded-pill" placeholder="Filtrar..." onkeyup="filtrarWiki()" style="width: 200px;">
+                        <div sec:authorize="hasAnyRole('ADMIN', 'ESCALA')"><button class="btn btn-sm btn-outline-secondary border-0 rounded-circle" onclick="modalDoc.show()"><i class="bi bi-cloud-upload"></i></button></div>
+                    </div>
+                </div>
+                <div class="card-body bg-white pt-2">
+                    <ul class="nav nav-tabs mb-3" id="docTabs"><li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-medica">Médica</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-enf">Enfermagem</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-adm">Admin</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-treina">Treinamentos</button></li></ul>
+                    <div class="tab-content scroll-box" style="height: 350px;"><div class="tab-pane fade show active" id="tab-medica"><div class="list-group list-group-flush" id="lista-doc-medica"></div></div><div class="tab-pane fade" id="tab-enf"><div class="list-group list-group-flush" id="lista-doc-enf"></div></div><div class="tab-pane fade" id="tab-adm"><div class="list-group list-group-flush" id="lista-doc-adm"></div></div><div class="tab-pane fade" id="tab-treina"><div class="list-group list-group-flush" id="lista-doc-treina"></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-content border-top-indigo">
+                <div class="card-header-clean text-indigo d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-images me-2 fs-5"></i> Galeria Social</span>
+                    <div sec:authorize="hasAnyRole('ADMIN', 'ESCALA')" id="btn-add-album-area"></div>
+                </div>
+                <div class="card-body bg-white rounded-bottom p-3">
+                    <div class="menu-scroll-container" id="lista-albuns"><div class="text-center w-100 text-muted py-3">Carregando...</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-content border-top-success">
+                <div class="card-header-clean text-success d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-whatsapp me-2 fs-5"></i> Canais & Grupos WhatsApp</span>
+                    <div sec:authorize="hasAnyRole('ADMIN', 'RH')"><button class="btn btn-sm btn-outline-success border-0 rounded-pill px-3" onclick="modalZap.show()">+ Novo Grupo</button></div>
+                </div>
+                <div class="card-body bg-white rounded-bottom p-3">
+                    <div class="d-flex gap-3 overflow-auto pb-2" id="lista-zap" style="scrollbar-width: thin;">
+                        <div class="text-muted small w-100 text-center">Carregando contatos...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card card-content h-100 border-0 shadow-sm">
+                <div class="card-header-clean text-secondary"><span><i class="bi bi-bar-chart-fill me-2"></i> Indicadores do Mês</span></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 border-end"><h6 class="text-center small fw-bold text-muted mb-3">Chamados TI</h6><div class="chart-container"><canvas id="chartChamados"></canvas></div></div>
+                        <div class="col-md-6"><h6 class="text-center small fw-bold text-muted mb-3">Manutenção</h6><div class="chart-container"><canvas id="chartManutencao"></canvas></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-dash bg-gradient-primary h-100 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 opacity-25" style="transform: translate(30%, -30%);"><i class="bi bi-balloon-fill" style="font-size: 150px; color: white;"></i></div>
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <div class="text-center mb-4"><div class="icon-box bg-white bg-opacity-25 rounded-circle mx-auto mb-2 text-white" style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;"><i class="bi bi-cake2-fill fs-3"></i></div><h5 class="text-white mb-0 fw-bold">Aniversariantes</h5><p class="text-white-50 small">Do Mês Atual</p></div>
+                    <div id="lista-aniversariantes" class="text-white text-center small fw-bold d-flex flex-column gap-1 overflow-auto" style="max-height: 150px;">Carregando...</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4" id="secao-enquete-footer" style="display: none;">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(to right, #ffffff, #f8f9fa); border-left: 5px solid #0dcaf0 !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2"><h6 class="fw-bold text-dark mb-0">Opinião</h6><button class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0" onclick="modalNovaEnquete.show()" style="font-size:0.7rem">Gerenciar</button></div>
+                    <div id="enquete-conteudo-visual" class="small"><div class="text-center text-muted">Carregando...</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPerfil" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title">Meu Perfil</h6>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="position-relative d-inline-block mb-3">
+                    <img id="perfilFotoPreview" src="" class="rounded-circle border shadow-sm" style="width: 100px; height: 100px; object-fit: cover; background: #eee;">
+                    <label class="position-absolute bottom-0 end-0 btn btn-sm btn-primary rounded-circle p-1 shadow" style="width: 32px; height: 32px;" title="Alterar Foto">
+                        <i class="bi bi-camera-fill"></i>
+                        <input type="file" id="perfilFotoInput" class="d-none" onchange="lerFoto('perfilFotoInput', 'perfilFotoBase64', 'perfilFotoPreview')">
+                    </label>
+                </div>
+                <input type="hidden" id="perfilFotoBase64">
+                <h5 id="perfilNomeDisplay" class="fw-bold mb-0">Usuário</h5>
+                <small id="perfilLoginDisplay" class="text-muted">login</small>
+                <hr>
+                <div class="text-start">
+                    <label class="small fw-bold text-muted mb-1">Nova Senha (Opcional)</label>
+                    <input type="password" id="perfilNovaSenha" class="form-control form-control-sm mb-2" placeholder="Deixe vazio para manter">
+                    <label class="small fw-bold text-muted mb-1">Confirmar Senha</label>
+                    <input type="password" id="perfilConfirmaSenha" class="form-control form-control-sm" placeholder="Repita a senha">
+                </div>
+            </div>
+            <div class="modal-footer p-2">
+                <button class="btn btn-primary w-100 btn-sm" onclick="salvarPerfil()">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAudit" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-shield-lock-fill me-2 text-danger"></i>Registro de Auditoria</h5>
+                <div class="ms-auto">
+                    <a href="/admin/auditoria/download" target="_blank" class="btn btn-sm btn-success fw-bold">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Baixar Relatório (CSV)
+                    </a>
+                    <button class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive" style="max-height: 600px;">
+                    <table class="table table-striped table-hover mb-0 small align-middle">
+                        <thead class="table-secondary sticky-top">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Módulo</th>
+                            <th>Detalhes</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabela-auditoria">
+                        <tr><td colspan="5" class="text-center py-3">Carregando logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovoAlbum" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Novo Álbum</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="albumTitulo" class="form-control mb-3" placeholder="Título"><input type="file" id="albumCapaFile" class="form-control" onchange="lerFoto('albumCapaFile','albumCapaBase64','previewCapaAlbum')"><input type="hidden" id="albumCapaBase64"><div class="text-center mt-2"><img id="previewCapaAlbum" style="max-height:100px; display:none;"></div></div><div class="modal-footer"><button id="btn-criar-album" class="btn btn-primary w-100" onclick="salvarAlbum()">Salvar</button></div></div></div></div>
+<div class="modal fade" id="modalVerAlbum" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content bg-white"><div class="modal-header border-0"><h5 class="modal-title text-dark fw-bold" id="tituloAlbumAberto">...</h5><div class="d-flex gap-2"><div sec:authorize="hasAnyRole('ADMIN', 'ESCALA')"><button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('novaFotoFile').click()">+ Fotos</button><input type="file" id="novaFotoFile" class="d-none" multiple onchange="enviarFoto()"><button class="btn btn-sm btn-outline-danger ms-1" onclick="deletarAlbumAberto()"><i class="bi bi-trash"></i></button></div><button class="btn-close" data-bs-dismiss="modal"></button></div></div><div class="modal-body scroll-box" style="height: 80vh;"><input type="hidden" id="idAlbumAberto"><div class="row g-3" id="grade-fotos"></div></div></div></div></div>
+<div class="modal fade" id="modalCarrossel" tabindex="-1" style="z-index: 1070;"><div class="modal-dialog modal-fullscreen bg-dark"><div class="modal-content bg-dark border-0"><div class="modal-header border-0 position-absolute w-100" style="z-index: 1080; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);"><h6 class="text-white" id="carrosselTitulo">Visualização</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0 d-flex align-items-center justify-content-center" style="height: 100vh;"><div id="carouselGaleria" class="carousel slide" style="width: 100%; height: 100%;"><div class="carousel-inner h-100 d-flex align-items-center" id="carousel-slides"></div><button class="carousel-control-prev" type="button" data-bs-target="#carouselGaleria" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button><button class="carousel-control-next" type="button" data-bs-target="#carouselGaleria" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button></div></div></div></div></div>
+<div class="modal fade" id="modalReserva" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-secondary"><div class="modal-header bg-secondary text-white"><h5 class="modal-title">Reservar</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="reservaNome" class="form-control mb-2" placeholder="Nome"><input type="text" id="reservaRamal" class="form-control mb-2" placeholder="Ramal"><select id="reservaSala" class="form-select mb-2"></select><input type="text" id="reservaData" class="form-control mb-2" placeholder="Data/Hora"><textarea id="reservaMotivo" class="form-control" rows="2" placeholder="Motivo"></textarea></div><div class="modal-footer"><button id="btn-fazer-reserva" class="btn btn-secondary w-100" onclick="fazerReserva()">Reservar</button></div></div></div></div>
+<div class="modal fade" id="modalSalas" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Salas</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="input-group mb-3"><input type="text" id="novaSalaNome" class="form-control" placeholder="Nome"><button class="btn btn-dark" onclick="criarSala()">+</button></div><ul id="lista-salas-gerencia" class="list-group list-group-flush"></ul></div></div></div></div>
+<div class="modal fade" id="modalGestaoUsuarios" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Gestão Usuários</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><div class="table-responsive" style="max-height: 60vh;"><table class="table table-hover align-middle mb-0 small"><thead class="table-light sticky-top"><tr><th class="ps-3">Login</th><th>Nome</th><th>Ramal</th><th>Setor</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead><tbody id="lista-usuarios-admin"></tbody></table></div></div></div></div></div>
+<div class="modal fade" id="modalEditUser" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content shadow-lg border-0"><div class="modal-header bg-dark text-white py-2"><h6 class="modal-title">Editar</h6><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="editUserId"><label class="small fw-bold">Perfil</label><select id="editUserPapel" class="form-select form-select-sm mb-2"><option value="USER">Visitante</option><option value="ADMIN">Admin</option><option value="TI">TI</option><option value="MANUTENCAO">Manut</option><option value="NUTRICAO">Nutrição</option><option value="ESCALA">Escala</option></select><label class="small fw-bold">Ramal</label><input type="text" id="editUserRamal" class="form-control form-control-sm mb-2"><label class="small fw-bold">Setor</label><input type="text" id="editUserSetor" class="form-control form-control-sm mb-2"><label class="small fw-bold">Cargo</label><input type="text" id="editUserCargo" class="form-control form-control-sm mb-2"><label class="small fw-bold">Senha</label><input type="text" id="editUserSenha" class="form-control form-control-sm"><div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" id="editUserAtivo"><label class="form-check-label small">Ativo</label></div></div><div class="modal-footer py-1"><button class="btn btn-primary btn-sm w-100" onclick="salvarEdicaoAdmin()">Salvar</button></div></div></div></div>
+<div class="modal fade" id="modalCardapio" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-success"><div class="modal-header bg-success text-white"><h5 class="modal-title">Cardápio</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="idCardapio"><h5 class="text-success text-center mb-3" id="diaCardapioDisplay"></h5><label class="small fw-bold">Data:</label><input type="date" id="dataCardapio" class="form-control mb-3"><label class="small fw-bold">Prato:</label><input type="text" id="pratoCardapio" class="form-control mb-3"><label class="small fw-bold">Acomp:</label><textarea id="acompCardapio" class="form-control" rows="3"></textarea></div><div class="modal-footer"><button class="btn btn-success w-100" onclick="salvarCardapio()">Salvar</button></div></div></div></div>
+
+<div class="modal fade" id="modalInscricao" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-primary">
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title">Inscrição</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="idEventoInscricao">
+                <div class="mb-2"><label class="small fw-bold">Nome</label><input type="text" id="inscNome" class="form-control"></div>
+                <div class="mb-2"><label class="small fw-bold">Cargo</label><input type="text" id="inscCargo" class="form-control"></div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="small fw-bold">Setor</label>
+                        <input type="text" id="inscSetor" class="form-control">
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold">Instituição</label>
+                        <input type="text" id="inscInst" class="form-control" placeholder="Hospital, Externo...">
+                    </div>
+                </div>
+
+                <div class="mb-3"><label class="small fw-bold">E-mail</label><input type="email" id="inscEmail" class="form-control"></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="inscNotificar" checked><label class="form-check-label small">Notificar</label></div>
+            </div>
+            <div class="modal-footer"><button id="btn-confirmar-inscricao" class="btn btn-primary w-100" onclick="realizarInscricao()">Confirmar</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalChamado" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-warning"><div class="modal-header bg-warning"><h5 class="modal-title text-dark">Chamado TI</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="form-floating mb-2"><input type="text" id="chamadoSolicitante" class="form-control" placeholder="Nome"><label>Solicitante</label></div><div class="row g-2 mb-2"><div class="col-6 form-floating"><input type="text" id="chamadoRamal" class="form-control" placeholder="Ramal"><label>Ramal</label></div><div class="col-6 form-floating"><input type="text" id="chamadoLocal" class="form-control" placeholder="Local"><label>Local</label></div></div><div class="form-floating mb-2"><input type="text" id="chamadoTitulo" class="form-control" placeholder="Título"><label>Assunto</label></div><div class="form-floating mb-2"><textarea id="chamadoDesc" class="form-control" placeholder="Detalhes" style="height: 100px"></textarea><label>Detalhes</label></div><select id="chamadoPrioridade" class="form-select"><option value="Baixa">🟢 Baixa</option><option value="Média">🟡 Média</option><option value="Alta">🔴 Alta</option></select></div><div class="modal-footer"><button id="btn-enviar-chamado" class="btn btn-warning w-100" onclick="enviarChamado()">Enviar</button></div></div></div></div>
+<div class="modal fade" id="modalManutencao" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-danger"><div class="modal-header bg-danger text-white"><h5 class="modal-title">Manutenção</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="form-floating mb-2"><input type="text" id="manutSolicitante" class="form-control" placeholder="Nome"><label>Solicitante</label></div><div class="form-floating mb-2"><input type="text" id="manutSetor" class="form-control" placeholder="Local"><label>Local</label></div><div class="form-floating mb-2"><select id="manutTipo" class="form-select"><option value="Elétrica">Elétrica</option><option value="Hidráulica">Hidráulica</option><option value="Ar">Ar Cond.</option><option value="Predial">Predial</option><option value="Outros">Outros</option></select><label>Tipo</label></div><div class="form-floating mb-2"><textarea id="manutDesc" class="form-control" placeholder="Descrição" style="height: 100px"></textarea><label>Descrição</label></div><select id="manutPrioridade" class="form-select"><option value="Baixa">🟢 Normal</option><option value="Média">🟡 Urgente</option><option value="Alta">🔴 Emergência</option></select></div><div class="modal-footer"><button id="btn-enviar-manutencao" class="btn btn-danger w-100" onclick="enviarManutencao()">Enviar</button></div></div></div></div>
+<div class="modal fade" id="modalEvento" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title">Evento</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="file" id="inputFotoEv" class="form-control mb-2" onchange="lerFoto('inputFotoEv','base64FotoEv','previewImgEv')"><input type="hidden" id="base64FotoEv"><img id="previewImgEv" class="img-fluid rounded mb-2" style="display:none;max-height:150px"><input type="text" id="tituloEv" class="form-control mb-2" placeholder="Título"><textarea id="descricaoEv" class="form-control mb-2" placeholder="Descrição..." rows="3"></textarea><div class="row g-2"><div class="col-7"><input type="date" id="dataEv" class="form-control"></div><div class="col-5"><input type="time" id="horaEv" class="form-control"></div></div></div><div class="modal-footer"><button class="btn btn-info w-100 text-white fw-bold" onclick="salvarEvento()">Publicar</button></div></div></div></div>
+<div class="modal fade" id="modalCadastro" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Funcionário</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="formFunc"><input type="hidden" id="idFunc"><div class="text-center mb-3"><img id="previewImg" src="" class="avatar shadow" style="width:80px;height:80px;display:none;margin:0 auto;object-fit:cover;border-radius:50%;"><label class="btn btn-sm btn-outline-primary mt-2">Carregar Foto<input type="file" id="inputFoto" class="d-none" onchange="lerFoto('inputFoto','base64Foto','previewImg')"></label><input type="hidden" id="base64Foto"></div><div class="mb-2"><input type="text" id="nome" class="form-control" placeholder="Nome Completo" required></div><div class="row g-2 mb-2"><div class="col-7"><input type="email" id="email" class="form-control" placeholder="E-mail"></div><div class="col-5"><input type="date" id="dataNasc" class="form-control"></div></div><div class="row g-2 mb-2"><div class="col-6"><input type="text" id="cargo" class="form-control" placeholder="Cargo"></div><div class="col-6"><select id="setor" class="form-select"><option value="">Setor...</option><option value="TI">TI</option><option value="RH">RH</option><option value="Enfermagem">Enfermagem</option><option value="Recepção">Recepção</option><option value="Adm">Adm</option></select></div></div><div class="mb-2"><input type="text" id="ramal" class="form-control" placeholder="Ramal"></div><div class="form-check form-switch bg-light p-2 rounded"><input class="form-check-input ms-0 me-2" type="checkbox" id="ativoFunc" checked><label>Ativo</label></div></form></div><div class="modal-footer"><button class="btn btn-primary w-100" onclick="salvarFuncionario()">Salvar</button></div></div></div></div>
+<div class="modal fade" id="modalSetores" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Setores</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="input-group mb-3"><input type="text" id="novoSetorNome" class="form-control" placeholder="Nome"><button class="btn btn-dark" onclick="criarSetor()">+</button></div><ul id="lista-setores-gerencia" class="list-group list-group-flush"></ul></div></div></div></div>
+<div class="modal fade" id="modalUsuarios" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Acessos</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="input-group mb-3"><input type="text" id="novoUserLogin" class="form-control" placeholder="Login"><input type="password" id="novoUserSenha" class="form-control" placeholder="Senha"><select id="novoUserPapel" class="form-select"><option value="USER">Comum</option><option value="ADMIN">Admin</option></select><button class="btn btn-dark" onclick="criarUsuario()">+</button></div><ul id="lista-usuarios" class="list-group list-group-flush"></ul></div></div></div></div>
+<div class="modal fade" id="modalDoc" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-secondary text-white"><h5 class="modal-title">Wiki Upload</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="docTitulo" class="form-control mb-2" placeholder="Título"><select id="docPasta" class="form-select mb-2"><option value="medica">Área Médica</option><option value="enf">Enfermagem</option><option value="adm">Administrativo</option><option value="treina">Treinamentos</option></select><textarea id="docDescricao" class="form-control mb-2" placeholder="Descrição"></textarea><label class="small fw-bold">Arquivo</label><input type="file" id="docArquivo" class="form-control mb-2"><label class="small fw-bold">Link Vídeo</label><input type="text" id="docVideo" class="form-control" placeholder="https://youtube..."></div><div class="modal-footer"><button class="btn btn-secondary w-100" onclick="uploadDocumento()">Salvar</button></div></div></div></div>
+<div class="modal fade" id="modalLink" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-secondary text-white"><h5 class="modal-title">Link Útil</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="linkNome" class="form-control mb-2" placeholder="Nome"><input type="text" id="linkUrl" class="form-control mb-2" placeholder="URL"><div class="d-flex gap-2 mt-2"><div class="form-check"><input class="form-check-input" type="radio" name="iconType" value="bi-envelope-at text-warning" checked><label>Web</label></div><div class="form-check"><input class="form-check-input" type="radio" name="iconType" value="bi-clipboard2-pulse text-danger"><label>Saúde</label></div><div class="form-check"><input class="form-check-input" type="radio" name="iconType" value="bi-cash-coin text-success"><label>Fin</label></div></div></div><div class="modal-footer"><button class="btn btn-secondary w-100" onclick="salvarLink()">Salvar</button></div></div></div></div>
+<div class="modal fade" id="modalZap" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-success"><div class="modal-header bg-success text-white"><h5 class="modal-title">Novo Grupo</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="zapTitulo" class="form-control mb-2" placeholder="Nome do Grupo"><input type="text" id="zapLink" class="form-control mb-2" placeholder="Link"><div class="text-center p-3 border rounded bg-light mb-2"><label class="btn btn-sm btn-outline-success mb-2">QR Code<input type="file" id="zapFile" class="d-none" onchange="lerFoto('zapFile', 'zapBase64', 'previewZap')"></label><input type="hidden" id="zapBase64"><br><img id="previewZap" style="max-height: 150px; display: none;"></div></div><div class="modal-footer"><button class="btn btn-success w-100" onclick="salvarZap()">Salvar</button></div></div></div></div>
+<div class="modal fade" id="modalNovaEnquete" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content"><div class="modal-header bg-info text-white"><h5 class="modal-title">Nova Enquete</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="enqPergunta" class="form-control mb-2" placeholder="Pergunta"><input type="text" id="enqOp1" class="form-control mb-2" placeholder="Opção 1"><input type="text" id="enqOp2" class="form-control" placeholder="Opção 2"><div class="mt-3 text-end"><button class="btn btn-sm btn-danger me-2" onclick="deletarEnquete()">Apagar</button><button class="btn btn-info text-white" onclick="criarEnquete()">Criar</button></div></div></div></div></div>
+<div class="modal fade" id="modalImagemGrande" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content bg-transparent border-0 position-relative"><button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal"></button><div class="modal-body p-0 text-center"><img id="imgGrandeSrc" src="" class="img-fluid rounded shadow-lg" style="max-height: 85vh;"></div></div></div></div>
+
+<div class="modal fade" id="modalFrota" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i>Gestão de Frota</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-success mb-3">Nova Reserva</h6>
+                                <label class="small text-muted fw-bold">Veículo</label>
+                                <select id="frotaVeiculo" class="form-select form-select-sm mb-2">
+                                    <option value="Carro Adm 01">🚗 Carro Adm 01</option>
+                                    <option value="Ambulância UTI">🚑 Ambulância UTI</option>
+                                    <option value="Van Transporte">🚐 Van Transporte</option>
+                                    <option value="Moto Express">🏍️ Moto Express</option>
+                                </select>
+                                <label class="small text-muted fw-bold">Data e Hora</label>
+                                <input type="datetime-local" id="frotaData" class="form-control form-control-sm mb-2">
+                                <label class="small text-muted fw-bold">Destino</label>
+                                <input type="text" id="frotaDestino" class="form-control form-control-sm mb-3" placeholder="Ex: Secretaria de Saúde">
+                                <button id="btn-reservar-frota" class="btn btn-success btn-sm w-100 fw-bold" onclick="reservarFrota()">
+                                    <i class="bi bi-calendar-plus me-1"></i> Agendar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white fw-bold small text-uppercase">Próximas Saídas</div>
+                            <div class="card-body p-0 overflow-auto" style="max-height: 300px;">
+                                <ul id="lista-frota" class="list-group list-group-flush small"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAchados" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-search me-2"></i>Achados e Perdidos</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <ul class="nav nav-tabs nav-fill mb-3" id="achadosTab" role="tablist">
+                    <li class="nav-item"><button class="nav-link active text-dark small fw-bold" data-bs-toggle="tab" data-bs-target="#tab-buscar-achado">🔍 Buscar Item</button></li>
+                    <li class="nav-item"><button class="nav-link text-dark small fw-bold" data-bs-toggle="tab" data-bs-target="#tab-registrar-achado">➕ Registrar Novo</button></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab-buscar-achado">
+                        <div class="input-group mb-3 shadow-sm">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-filter"></i></span>
+                            <input type="text" id="filtroAchados" class="form-control border-0" placeholder="Filtrar por objeto ou local..." onkeyup="filtrarAchados()">
+                        </div>
+                        <div id="lista-achados" class="row g-2 overflow-auto" style="max-height: 400px;"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-registrar-achado">
+                        <div class="card border-0 shadow-sm p-3">
+                            <div class="row g-2">
+                                <div class="col-md-4 text-center">
+                                    <div class="border rounded bg-light d-flex align-items-center justify-content-center mb-2" style="height: 140px; overflow: hidden;">
+                                        <img id="previewAchado" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
+                                        <div id="placeholderAchado" class="text-muted small"><i class="bi bi-camera fs-1"></i><br>Foto do Item</div>
+                                    </div>
+                                    <label class="btn btn-sm btn-outline-secondary w-100">
+                                        <i class="bi bi-upload me-1"></i> Carregar Foto
+                                        <input type="file" id="fotoAchadoInput" class="d-none" onchange="lerFoto('fotoAchadoInput', 'base64Achado', 'previewAchado'); document.getElementById('placeholderAchado').style.display='none';">
+                                    </label>
+                                    <input type="hidden" id="base64Achado">
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-floating mb-2">
+                                        <input type="text" id="achadoOque" class="form-control" placeholder="Objeto">
+                                        <label>O que foi encontrado? (Ex: Chave, RG)</label>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6 form-floating mb-2">
+                                            <input type="text" id="achadoOnde" class="form-control" placeholder="Local">
+                                            <label>Onde?</label>
+                                        </div>
+                                        <div class="col-6 form-floating mb-2">
+                                            <input type="text" id="achadoQuem" class="form-control" placeholder="Quem">
+                                            <label>Quem achou?</label>
+                                        </div>
+                                    </div>
+                                    <button id="btn-registrar-achado" class="btn btn-warning w-100 fw-bold py-2 mt-2" onclick="registrarAchado()">
+                                        Confirmar Registro
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ==========================================
+     // 1. CONFIGURAÇÕES E API
+     // ==========================================
+     const API = {
+         func: '/funcionarios',
+         chamados: '/chamados',
+         manutencao: '/manutencao',
+         admin: '/admin/usuarios',
+         aviso:'/avisos',
+         evento:'/eventos',
+         cardapio:'/cardapios',
+         reservas: '/reservas',
+         salas: '/salas',
+         links: '/links',
+         galeria: '/galeria',
+         inscricao: '/api/inscricoes',
+         whatsapp: '/api/whatsapp'
+     };
+
+     // Variáveis Globais
+     let modalChamado, modalManutencao, modalGestao, modalEditUser, modalFunc, modalMenu,
+         modalEv, modalReserva, modalSalas, modalLink, modalDoc, modalNovoAlbum,
+         modalVerAlbum, modalCarrossel, modalNovaEnquete, modalInscricao, modalSetores,
+         modalUsuarios, modalZap, modalImagemGrande, modalPerfil, modalFrota, modalAchados, modalAudit;
+
+     let usuarioPapel = 'USER';
+     const safeStr = (str) => (str || '').toString().replace(/"/g, '&quot;').replace(/'/g, "\\'");
+     let dataSelecionadaIso = new Date().toISOString().split('T')[0];
+
+     const fmtData = (d) => {
+         if(!d) return '';
+         const p = d.split('-');
+         return p.length === 3 ? `${p[2]}/${p[1]}` : d;
+     };
+
+     // ==========================================
+     // 2. INICIALIZAÇÃO
+     // ==========================================
+     window.onload = () => {
+         // Inicializa Modais (com proteção contra erros)
+         const ids = [
+             'modalChamado','modalManutencao','modalGestaoUsuarios','modalEditUser',
+             'modalCadastro','modalCardapio','modalEvento','modalReserva','modalSalas',
+             'modalLink','modalDoc','modalNovoAlbum','modalVerAlbum','modalCarrossel',
+             'modalNovaEnquete', 'modalInscricao', 'modalSetores', 'modalUsuarios',
+             'modalZap', 'modalImagemGrande', 'modalPerfil', 'modalFrota', 'modalAchados', 'modalAudit'
+         ];
+
+         ids.forEach(id => {
+             const el = document.getElementById(id);
+             if(el) {
+                 try {
+                     if(id=='modalGestaoUsuarios') modalGestao = new bootstrap.Modal(el);
+                     else if(id=='modalEditUser') modalEditUser = new bootstrap.Modal(el);
+                     else if(id=='modalCadastro') modalFunc = new bootstrap.Modal(el);
+                     else if(id=='modalCardapio') modalMenu = new bootstrap.Modal(el);
+                     else if(id=='modalEvento') modalEv = new bootstrap.Modal(el);
+                     else if(id=='modalNovoAlbum') modalNovoAlbum = new bootstrap.Modal(el);
+                     else if(id=='modalVerAlbum') modalVerAlbum = new bootstrap.Modal(el);
+                     else if(id=='modalCarrossel') modalCarrossel = new bootstrap.Modal(el);
+                     else if(id=='modalInscricao') modalInscricao = new bootstrap.Modal(el);
+                     else if(id=='modalReserva') modalReserva = new bootstrap.Modal(el);
+                     else if(id=='modalSalas') modalSalas = new bootstrap.Modal(el);
+                     else if(id=='modalSetores') modalSetores = new bootstrap.Modal(el);
+                     else if(id=='modalDoc') modalDoc = new bootstrap.Modal(el);
+                     else if(id=='modalZap') modalZap = new bootstrap.Modal(el);
+                     else if(id=='modalPerfil') modalPerfil = new bootstrap.Modal(el);
+                     else if(id=='modalNovaEnquete') modalNovaEnquete = new bootstrap.Modal(el);
+                     else if(id=='modalFrota') modalFrota = new bootstrap.Modal(el);
+                     else if(id=='modalAchados') modalAchados = new bootstrap.Modal(el);
+                     else if(id=='modalAudit') modalAudit = new bootstrap.Modal(el);
+                     else window[id] = new bootstrap.Modal(el);
+                 } catch(e) { console.warn("Erro ao iniciar modal: " + id); }
+             }
+         });
+
+         // Garantia extra para modais principais
+         if(!modalChamado && document.getElementById('modalChamado')) modalChamado = new bootstrap.Modal(document.getElementById('modalChamado'));
+         if(!modalManutencao && document.getElementById('modalManutencao')) modalManutencao = new bootstrap.Modal(document.getElementById('modalManutencao'));
+
+         // Carrega Sessão e dispara os módulos
+         carregarSessao().finally(() => {
+             // Usa 'executarSeguro' para que o erro em um não trave o outro
+             executarSeguro(carregarRamais);
+             executarSeguro(carregarChamados);
+             executarSeguro(carregarManutencao);
+             executarSeguro(carregarCardapio);
+             executarSeguro(carregarEventos);
+             executarSeguro(carregarAvisos);
+             executarSeguro(() => carregarEscalaDia(dataSelecionadaIso));
+             executarSeguro(carregarReservas);
+             executarSeguro(carregarLinks);
+             executarSeguro(carregarGaleria);
+             executarSeguro(carregarZaps);
+             executarSeguro(() => carregarDocumentos('medica'));
+             executarSeguro(renderizarGraficos);
+             executarSeguro(carregarAniversariantes);
+             executarSeguro(carregarEnquetes);
+             executarSeguro(carregarFrota);   // <--- GARANTIDO
+             executarSeguro(carregarAchados); // <--- GARANTIDO
+         });
+
+         // Listener de Abas de Documentos
+         const docTabs = document.querySelectorAll('#docTabs button');
+         if(docTabs) {
+             docTabs.forEach(btn => {
+                 btn.addEventListener('shown.bs.tab', (e) => {
+                     const targetId = e.target.getAttribute('data-bs-target');
+                     const pasta = targetId.replace('#tab-', '');
+                     carregarDocumentos(pasta);
+                 });
+             });
+         }
+     };
+
+     function executarSeguro(funcao) {
+         try { funcao(); } catch (e) { console.error("Erro no módulo JS:", e); }
+     }
+
+     async function carregarSessao() {
+         try {
+             const r = await fetch('/sessao');
+             if (r.ok) {
+                 const d = await r.json();
+                 if (d.logado === "true") {
+                     let p = d.papel || 'USER';
+                     if(p.startsWith('ROLE_')) p = p.replace('ROLE_', '');
+                     usuarioPapel = p;
+                     atualizarUIAdmin();
+                 }
+             }
+         } catch(e) { console.log("Sessão offline."); }
+     }
+
+     function atualizarUIAdmin() {
+         if(usuarioPapel === 'ADMIN') {
+             const linkArea = document.getElementById('btn-add-link-area');
+             if(linkArea) linkArea.innerHTML = `<button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-circle" onclick="modalLink.show()"><i class="bi bi-plus-lg"></i></button>`;
+
+             const areaEscala = document.getElementById('btn-salvar-escala-area');
+             if(areaEscala) areaEscala.classList.remove('d-none');
+
+             document.querySelectorAll('.inp-supervisor, .inp-ramal, .inp-medico').forEach(el => el.disabled = false);
+         }
+         if(usuarioPapel === 'ESCALA') {
+             document.querySelectorAll('.inp-supervisor, .inp-ramal, .inp-medico').forEach(el => el.disabled = false);
+         }
+         if(usuarioPapel === 'ADMIN' || usuarioPapel === 'ESCALA') {
+             const albumArea = document.getElementById('btn-add-album-area');
+             if(albumArea) albumArea.innerHTML = `<button class="btn btn-sm btn-outline-indigo rounded-pill px-3 shadow-sm" onclick="modalNovoAlbum.show()">+ Novo</button>`;
+         }
+     }
+
+     // ================= EVENTOS (CARROSSEL) =================
+     async function carregarEventos() {
+         const container = document.getElementById('lista-eventos');
+         if(!container) return;
+
+         try {
+             const r = await fetch(API.evento);
+             const l = await r.json();
+
+             if(!l.length) {
+                 container.innerHTML = '<div class="text-center py-5 text-muted opacity-50"><i class="bi bi-calendar-x fs-1"></i><br>Nenhum evento no momento.</div>';
+                 return;
+             }
+
+             if(l.length === 1) {
+                 container.innerHTML = gerarHtmlCardEvento(l[0]);
+                 return;
+             }
+
+             const slides = l.map((e, index) => `
+                 <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                     ${gerarHtmlCardEvento(e)}
+                 </div>
+             `).join('');
+
+             container.innerHTML = `
+                 <div id="carouselEventosDashboard" class="carousel slide" data-bs-ride="carousel">
+                     <div class="carousel-inner">${slides}</div>
+                     <button class="carousel-control-prev" type="button" data-bs-target="#carouselEventosDashboard" data-bs-slide="prev" style="width: 5%; justify-content: flex-start;">
+                         <span class="carousel-control-prev-icon bg-dark rounded-circle p-2 shadow" aria-hidden="true" style="background-size: 50%"></span>
+                     </button>
+                     <button class="carousel-control-next" type="button" data-bs-target="#carouselEventosDashboard" data-bs-slide="next" style="width: 5%; justify-content: flex-end;">
+                         <span class="carousel-control-next-icon bg-dark rounded-circle p-2 shadow" aria-hidden="true" style="background-size: 50%"></span>
+                     </button>
+                 </div>`;
+         } catch(e) {
+             container.innerHTML = '<div class="text-danger text-center p-3">Erro ao carregar eventos.</div>';
+         }
+     }
+
+     function gerarHtmlCardEvento(e) {
+         return `
+         <div class="card card-evento border-0 shadow-sm mb-3">
+             <div class="row g-0">
+                 <div class="col-md-4 evento-img-wrapper" style="height: 220px; min-height: 220px;">
+                     <img src="${e.foto || 'https://via.placeholder.com/400x300?text=Evento'}" class="evento-img w-100 h-100 object-fit-cover" onclick="verImagemGrande(this.src)">
+                 </div>
+                 <div class="col-md-8">
+                     <div class="card-body h-100 d-flex flex-column justify-content-between py-3 px-4">
+                         <div>
+                             <div class="d-flex justify-content-between align-items-start mb-2">
+                                 <h5 class="fw-bold mb-0 text-dark text-truncate" title="${safeStr(e.titulo)}">${safeStr(e.titulo)}</h5>
+                                 <span class="badge bg-primary rounded-pill small ms-2 px-3">${e.inscricoes ? e.inscricoes.length : 0} <i class="bi bi-people-fill"></i></span>
+                             </div>
+                             <p class="small text-secondary mb-3 text-truncate-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em;">${safeStr(e.descricao)}</p>
+                             <div class="d-flex gap-3 small text-muted mb-0 bg-light rounded p-2 border">
+                                 <div><i class="bi bi-calendar-event text-primary me-2"></i><strong>${fmtData(e.dataEvento)}</strong></div>
+                                 <div><i class="bi bi-clock text-primary me-2"></i><strong>${e.horaEvento || '--:--'}</strong></div>
+                             </div>
+                         </div>
+                         <div class="mt-3 d-flex gap-2">
+                             <button class="btn btn-sm btn-primary w-100 rounded-pill fw-bold shadow-sm" onclick="abrirInscricao(${e.id})"><i class="bi bi-pencil-square me-2"></i>Inscrever-se</button>
+                             ${usuarioPapel === 'ADMIN' ? `
+                                 <div class="dropdown">
+                                     <button class="btn btn-sm btn-outline-secondary rounded-circle border-0" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                     <ul class="dropdown-menu shadow">
+                                         <li><button class="dropdown-item small text-success" onclick="baixarLista(${e.id})"><i class="bi bi-file-earmark-excel me-2"></i>Baixar Lista CSV</button></li>
+                                         <li><hr class="dropdown-divider"></li>
+                                         <li><button class="dropdown-item small text-danger" onclick="delEv(${e.id})"><i class="bi bi-trash me-2"></i>Excluir Evento</button></li>
+                                     </ul>
+                                 </div>` : ''}
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </div>`;
+     }
+
+     async function salvarEvento() { const p = { titulo: document.getElementById('tituloEv').value, dataEvento: document.getElementById('dataEv').value, horaEvento: document.getElementById('horaEv').value, foto: document.getElementById('base64FotoEv').value, descricao: document.getElementById('descricaoEv').value }; await fetch(API.evento, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) }); modalEv.hide(); carregarEventos(); showToast("Publicado!"); }
+     function abrirInscricao(id) { document.getElementById('idEventoInscricao').value = id; modalInscricao.show(); }
+
+     async function realizarInscricao() {
+         setLoading('btn-confirmar-inscricao', true);
+         const p = {
+             eventoId: document.getElementById('idEventoInscricao').value,
+             nome: document.getElementById('inscNome').value,
+             cargo: document.getElementById('inscCargo').value,
+             setor: document.getElementById('inscSetor').value,
+             instituicao: document.getElementById('inscInst').value,
+             email: document.getElementById('inscEmail').value
+         };
+         try {
+             await fetch(API.inscricao, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) });
+             showToast("Inscrito!"); modalInscricao.hide();
+             document.getElementById('inscNome').value=''; document.getElementById('inscInst').value='';
+             carregarEventos();
+         } finally { setLoading('btn-confirmar-inscricao', false); }
+     }
+     function baixarLista(id) { window.open(`${API.inscricao}/evento/${id}/lista`, '_blank'); }
+     async function delEv(id) { if(confirm("Apagar?")) { await fetch(`${API.evento}/${id}`, {method:'DELETE'}); carregarEventos(); } }
+
+     // ================= ESCALA (MÉDICO / ENFERMAGEM) =================
+     async function carregarEscalaDia(iso){
+         dataSelecionadaIso=iso;
+         const l=document.getElementById('loading-escala');
+         const c=document.getElementById('conteudo-escala');
+         if(l)l.style.display='block';
+         if(c)c.style.display='none';
+
+         try{
+             const r=await fetch(`/api/escala/${iso}`);
+             if(!r.ok) throw new Error("Erro API Escala");
+             const d=await r.json();
+
+             if(document.getElementById('escalaId')) document.getElementById('escalaId').value=d.id||0;
+
+             // Renderiza Médicos
+             const tbMed=document.getElementById('tabela-escala-med');
+             if(tbMed) {
+                 tbMed.innerHTML='';
+                 if(d.escalaMedica && d.escalaMedica.length>0){
+                     d.escalaMedica.forEach(i=>{
+                         tbMed.innerHTML+=`
+                         <tr>
+                             <td class="fw-bold small text-primary">${safeStr(i.setor?i.setor.nome:'-')}</td>
+                             <td><input class="inp-medico form-control form-control-sm border-0" data-setor-id="${i.setor?i.setor.id:0}" value="${safeStr(i.medico)}" placeholder="Nome..." disabled></td>
+                             <td><input class="inp-ramal form-control form-control-sm border-0 text-center" value="${safeStr(i.ramal)}" disabled></td>
+                         </tr>`;
+                     });
+                 } else { tbMed.innerHTML='<tr><td colspan="3" class="text-center small py-3">Sem setores médicos cadastrados.</td></tr>'; }
+             }
+
+             // Renderiza Enfermagem
+             const tbEnf=document.getElementById('tabela-escala-enf');
+             if(tbEnf) {
+                 tbEnf.innerHTML='';
+                 if(d.escalaEnfermagem && d.escalaEnfermagem.length>0){
+                     d.escalaEnfermagem.forEach(i=>{
+                         tbEnf.innerHTML+=`
+                         <tr>
+                             <td class="fw-bold small text-success">${safeStr(i.setor?i.setor.nome:'-')}</td>
+                             <td><input class="inp-supervisor form-control form-control-sm border-0" data-setor-id="${i.setor?i.setor.id:0}" value="${safeStr(i.supervisor)}" placeholder="Enfermeiro..." disabled></td>
+                             <td><input class="inp-ramal form-control form-control-sm border-0 text-center" value="${safeStr(i.ramal)}" disabled></td>
+                         </tr>`;
+                     });
+                 } else { tbEnf.innerHTML='<tr><td colspan="3" class="text-center small py-3">Sem setores enfermagem cadastrados.</td></tr>'; }
+             }
+
+             gerarAbasDias(iso);
+             atualizarUIAdmin();
+
+         } catch(e) { console.error("Erro ao carregar escala:", e); }
+         finally {
+             if(l)l.style.display='none';
+             if(c)c.style.display='block';
+         }
+     }
+
+     function gerarAbasDias(data) { const c=document.getElementById('escalaTabs'); if(c&&c.innerHTML.trim()===''){ for(let i=0;i<7;i++){ let d=new Date(); d.setDate(new Date().getDate()+i); const iso=d.toISOString().split('T')[0]; c.innerHTML+=`<li class="nav-item"><button class="nav-link border btn-dia-escala rounded-pill px-3" id="btn-dia-${iso}" onclick="carregarEscalaDia('${iso}')"><div class="small fw-bold">${d.getDate()}/${d.getMonth()+1}</div></button></li>`; } } document.querySelectorAll('.btn-dia-escala').forEach(b=>{b.classList.remove('active','bg-primary','text-white'); if(b.id===`btn-dia-${data}`)b.classList.add('active','bg-primary','text-white');}); }
+
+     async function salvarEscalaDia() {
+         const id=document.getElementById('escalaId').value;
+         const enf=[];
+         document.querySelectorAll('#tabela-escala-enf tr').forEach(tr=>{ const s=tr.querySelector('.inp-supervisor'); const r=tr.querySelector('.inp-ramal'); if(s) enf.push({setor:{id:s.dataset.setorId}, supervisor:s.value, ramal:r.value}); });
+         const med=[];
+         document.querySelectorAll('#tabela-escala-med tr').forEach(tr=>{ const m=tr.querySelector('.inp-medico'); const r=tr.querySelector('.inp-ramal'); if(m) med.push({setor:{id:m.dataset.setorId}, medico:m.value, ramal:r.value}); });
+
+         const p={ data:dataSelecionadaIso, escalaEnfermagem:enf, escalaMedica:med };
+         await fetch(`/api/escala/${id==0?0:id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+         showToast("Salvo!");
+         carregarEscalaDia(dataSelecionadaIso);
+     }
+
+     async function replicarEscala() { const id=document.getElementById('escalaId').value; if(id==0)return alert("Salve antes"); await fetch(`/api/escala/replicar/${id}`,{method:'POST'}); showToast("Replicado!"); }
+
+     // ================= OUTROS MÓDULOS =================
+     async function carregarRamais() { const t=document.getElementById('tabela-corpo'); if(!t)return; try{const r=await fetch(API.func); const l=await r.json(); t.innerHTML=l.map(f=>`<tr><td class="ps-4"><div class="d-flex align-items-center"><div class="avatar-small bg-secondary me-3 overflow-hidden">${f.foto?`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover">`:f.nome.charAt(0)}</div><div><div class="fw-bold small text-dark">${safeStr(f.nome)}</div><div class="text-muted small" style="font-size:0.7rem">${safeStr(f.email)}</div></div></div></td><td><span class="badge bg-light text-dark border">${safeStr(f.ramal)}</span></td><td class="small">${safeStr(f.setor)}</td><td class="text-end pe-4">${usuarioPapel==='ADMIN'?`<button class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="deletarFuncionario(${f.id})"><i class="bi bi-trash-fill"></i></button>`:''}</td></tr>`).join('');}catch(e){}}
+     function abrirModalCadastro() { document.getElementById('formFunc').reset(); document.getElementById('idFunc').value = ''; document.getElementById('previewImg').style.display = 'none'; modalFunc.show(); }
+     async function salvarFuncionario() { const p={id:document.getElementById('idFunc').value||null, nome:document.getElementById('nome').value, email:document.getElementById('email').value, ramal:document.getElementById('ramal').value, setor:document.getElementById('setor').value, cargo:document.getElementById('cargo').value, foto:document.getElementById('base64Foto').value, ativo:document.getElementById('ativoFunc').checked}; await fetch(API.func, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)}); modalFunc.hide(); carregarRamais(); showToast("Salvo!"); }
+     async function deletarFuncionario(id) { if(confirm("Excluir?")) { await fetch(`${API.func}/${id}`, {method:'DELETE'}); carregarRamais(); } }
+     function filtrarTabela() { const t = document.getElementById('inputBusca').value.toLowerCase(); document.querySelectorAll('#tabela-corpo tr').forEach(tr => { tr.style.display = tr.innerText.toLowerCase().includes(t) ? '' : 'none'; }); }
+
+     async function abrirModalPerfil() { try { const r = await fetch('/api/perfil/meus-dados'); if(r.ok) { const d = await r.json(); document.getElementById('perfilNomeDisplay').innerText = d.nome || 'Usuário'; document.getElementById('perfilLoginDisplay').innerText = d.login; if(d.foto) { document.getElementById('perfilFotoPreview').src = d.foto; document.getElementById('perfilFotoBase64').value = d.foto; } modalPerfil.show(); } } catch(e) {} }
+     async function salvarPerfil() { const p = { novaSenha: document.getElementById('perfilNovaSenha').value, foto: document.getElementById('perfilFotoBase64').value }; await fetch('/api/perfil', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p) }); showToast("Perfil atualizado!"); modalPerfil.hide(); setTimeout(()=>location.reload(), 1000); }
+
+     async function carregarAvisos() { const c=document.getElementById('lista-avisos'); if(!c)return; try{const r=await fetch(API.aviso); const l=await r.json(); c.innerHTML = l.map(a=>`<div class="alert alert-primary p-2 mb-2 small d-flex justify-content-between shadow-sm border-0"><span><strong>${a.titulo}</strong></span> ${(usuarioPapel==='ADMIN') ? `<button class="btn btn-sm text-danger p-0" onclick="delAv(${a.id})">×</button>` : ''}</div>`).join('');}catch(e){}}
+     async function postarAviso() { await fetch(API.aviso,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({titulo:document.getElementById('novoAvisoTitulo').value})}); document.getElementById('novoAvisoTitulo').value=''; carregarAvisos(); }
+     async function delAv(id) { if(confirm("Excluir?")) { await fetch(`${API.aviso}/${id}`, {method:'DELETE'}); carregarAvisos(); } }
+
+     async function carregarLinks() { const c=document.getElementById('lista-links-uteis'); if(!c)return; try{const r=await fetch(API.links); const l=await r.json(); c.innerHTML = l.map(k => `<div class="col-6"><a href="${k.url}" target="_blank" class="btn-quick-link border-secondary text-secondary"><i class="${k.icone||'bi bi-link'} fs-5 me-2"></i> ${safeStr(k.nome)}</a></div>`).join('');}catch(e){}}
+     async function salvarLink() { await fetch(API.links,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:document.getElementById('linkNome').value, url:document.getElementById('linkUrl').value})}); modalLink.hide(); carregarLinks(); }
+
+     async function carregarChamados(){ const c=document.getElementById('lista-chamados'); if(!c)return; try{const r=await fetch(API.chamados); const l=await r.json(); const adm=(usuarioPapel==='ADMIN'||usuarioPapel==='TI'); c.innerHTML = l.filter(x=>x.status!=='Concluído').map(i=>`<div class="border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center"><div><div class="fw-bold small">${safeStr(i.titulo)}</div><span class="text-muted" style="font-size:0.7rem">${safeStr(i.solicitante)}</span></div>${adm?`<div><button class="btn btn-sm btn-success py-0 px-2 rounded-circle me-1" onclick="concluirChamado(${i.id})">✓</button><button class="btn btn-sm btn-danger py-0 px-2 rounded-circle" onclick="deletarChamado(${i.id})">×</button></div>`:''}</div>`).join('');}catch(e){}}
+     async function enviarChamado(){ await fetch(API.chamados,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({solicitante:document.getElementById('chamadoSolicitante').value, titulo:document.getElementById('chamadoTitulo').value, descricao:document.getElementById('chamadoDesc').value, prioridade:'Média'})}); modalChamado.hide(); carregarChamados(); }
+     async function concluirChamado(id) { if(confirm("Concluir?")) { await fetch(`${API.chamados}/${id}/concluir`, {method:'PUT'}); carregarChamados(); } }
+     async function deletarChamado(id) { if(confirm("Apagar?")) { await fetch(`${API.chamados}/${id}`, {method:'DELETE'}); carregarChamados(); } }
+
+     async function carregarManutencao(){ const c=document.getElementById('lista-manutencao'); if(!c)return; try{const r=await fetch(API.manutencao); const l=await r.json(); const adm=(usuarioPapel==='ADMIN'||usuarioPapel==='MANUTENCAO'); c.innerHTML = l.filter(x=>x.status!=='Concluído').map(i=>`<div class="border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center"><div><div class="fw-bold small">${safeStr(i.tipo)}</div><span class="text-muted" style="font-size:0.7rem">${safeStr(i.setor)}</span></div>${adm?`<div><button class="btn btn-sm btn-success py-0 px-2 rounded-circle me-1" onclick="concluirManutencao(${i.id})">✓</button><button class="btn btn-sm btn-danger py-0 px-2 rounded-circle" onclick="deletarManutencao(${i.id})">×</button></div>`:''}</div>`).join('');}catch(e){}}
+     async function enviarManutencao(){ await fetch(API.manutencao,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({solicitante:document.getElementById('manutSolicitante').value, setor:document.getElementById('manutSetor').value, tipo:document.getElementById('manutTipo').value, descricao:document.getElementById('manutDesc').value})}); modalManutencao.hide(); carregarManutencao(); }
+     async function concluirManutencao(id) { if(confirm("Concluir?")) { await fetch(`${API.manutencao}/${id}/concluir`, {method:'PUT'}); carregarManutencao(); } }
+     async function deletarManutencao(id) { if(confirm("Apagar?")) { await fetch(`${API.manutencao}/${id}`, {method:'DELETE'}); carregarManutencao(); } }
+
+     // Frota
+     async function carregarFrota() { const ul=document.getElementById('lista-frota'); if(!ul)return; try{const r=await fetch('/frota'); const l=await r.json(); if(!l.length){ul.innerHTML='<div class="text-center py-4 text-muted"><i class="bi bi-calendar-x fs-1 opacity-25"></i><br>Vazio</div>';return;} l.sort((a,b)=>new Date(a.dataHoraSaida)-new Date(b.dataHoraSaida)); ul.innerHTML=l.map(f=>`<li class="list-group-item d-flex align-items-center justify-content-between"><div class="d-flex align-items-center"><div class="bg-success bg-opacity-10 text-success rounded p-2 text-center me-3"><div class="fw-bold" style="font-size:0.8rem">${new Date(f.dataHoraSaida).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</div><div class="fw-bold" style="font-size:0.9rem">${new Date(f.dataHoraSaida).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div><div><div class="fw-bold text-dark">${safeStr(f.veiculo)}</div><small class="text-muted">${safeStr(f.destino)}</small></div></div>${usuarioPapel==='ADMIN'?`<button class="btn btn-sm text-danger" onclick="delFrota(${f.id})">×</button>`:''}</li>`).join('');}catch(e){ul.innerHTML='Erro.';}}
+     async function reservarFrota() { const p={veiculo:document.getElementById('frotaVeiculo').value, destino:document.getElementById('frotaDestino').value, dataHoraSaida:document.getElementById('frotaData').value, solicitante:'Eu'}; await fetch('/frota',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}); carregarFrota(); modalFrota.hide(); }
+     async function delFrota(id) { if(confirm("Cancelar?")) { await fetch(`/frota/${id}`,{method:'DELETE'}); carregarFrota(); } }
+
+     // Achados
+     async function carregarAchados() { const d=document.getElementById('lista-achados'); if(!d)return; try{const r=await fetch('/achados'); const l=await r.json(); window.todosAchados=l; renderizarAchados(l);}catch(e){} }
+     function renderizarAchados(l) { const d=document.getElementById('lista-achados'); if(!l.length){d.innerHTML='<div class="text-center text-muted py-3">Vazio</div>';return;} d.innerHTML=l.map(a=>`<div class="col-md-6"><div class="card h-100 border-0 shadow-sm"><div class="d-flex"><div style="width:80px;height:80px;"><img src="${a.foto||''}" class="w-100 h-100 object-fit-cover rounded-start"></div><div class="card-body p-2"><h6 class="fw-bold mb-1 text-truncate">${safeStr(a.oQue)}</h6><div class="small text-muted lh-1">${safeStr(a.onde)}</div></div><div class="d-flex align-items-center pe-2"><button class="btn btn-sm text-success" onclick="retirarAchado(${a.id})">✓</button></div></div></div></div>`).join(''); }
+     async function registrarAchado() { const p={oQue:document.getElementById('achadoOque').value, onde:document.getElementById('achadoOnde').value, quemAchou:document.getElementById('achadoQuem').value, foto:document.getElementById('base64Achado').value}; await fetch('/achados',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}); carregarAchados(); modalAchados.hide(); }
+     async function retirarAchado(id) { if(confirm("Entregue?")) { await fetch(`/achados/${id}/retirar`,{method:'PUT'}); carregarAchados(); } }
+     function filtrarAchados() { const t=document.getElementById('filtroAchados').value.toLowerCase(); if(window.todosAchados) renderizarAchados(window.todosAchados.filter(a=>a.oQue.toLowerCase().includes(t)||a.onde.toLowerCase().includes(t))); }
+
+     async function carregarSetoresGerencia() { const ul = document.getElementById('lista-setores-gerencia'); if(!ul) return; try { const r = await fetch('/setores'); const l = await r.json(); ul.innerHTML = l.length ? l.map(s => `<li class="list-group-item d-flex justify-content-between"><span>${s.nome}</span><button onclick="deletarSetor(${s.id})" class="btn btn-sm btn-danger py-0">x</button></li>`).join('') : 'Vazio'; } catch(e) {} }
+     async function criarSetor() { const n = document.getElementById('novoSetorNome').value; if(!n) return; await fetch('/setores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:n})}); document.getElementById('novoSetorNome').value=''; carregarSetoresGerencia(); carregarEscalaDia(dataSelecionadaIso); }
+     async function deletarSetor(id) { if(confirm("Apagar?")) { await fetch(`/setores/${id}`, {method:'DELETE'}); carregarSetoresGerencia(); carregarEscalaDia(dataSelecionadaIso); } }
+
+     async function carregarZaps() { const c=document.getElementById('lista-zap'); if(!c)return; try{const r=await fetch(API.whatsapp); const l=await r.json(); c.innerHTML = l.length ? l.map(z=>`<div class="card shadow-sm" style="min-width:180px;"><div class="p-2 text-center"><img src="${z.qrCode}" style="width:100px; cursor:zoom-in; transition: transform 0.2s;" onclick="verImagemGrande(this.src)" title="Clique para ampliar" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div><div class="card-body p-2 text-center"><a href="${z.link}" target="_blank" class="btn btn-sm btn-success w-100">Entrar</a>${usuarioPapel==='ADMIN'?`<button class="btn btn-sm btn-danger mt-1" onclick="deletarZap(${z.id})">Excluir</button>`:''}</div></div>`).join('') : '';}catch(e){}}
+     async function salvarZap() { await fetch(API.whatsapp,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({titulo:document.getElementById('zapTitulo').value, link:document.getElementById('zapLink').value, qrCode:document.getElementById('zapBase64').value})}); modalZap.hide(); carregarZaps(); }
+     async function deletarZap(id) { if(confirm("Excluir?")) { await fetch(`${API.whatsapp}/${id}`,{method:'DELETE'}); carregarZaps(); } }
+
+     async function renderizarGraficos() { try{const rC=await fetch(API.chamados); const lC=await rC.json(); const abertos=lC.filter(x=>x.status!=='Concluído').length; new Chart(document.getElementById('chartChamados'),{type:'doughnut',data:{labels:['Abertos','Concluídos'],datasets:[{data:[abertos,lC.length-abertos],backgroundColor:['#f6c23e','#1cc88a']}]}}); const rM=await fetch(API.manutencao); const lM=await rM.json(); const t={}; lM.forEach(m=>{t[m.tipo]=(t[m.tipo]||0)+1}); new Chart(document.getElementById('chartManutencao'),{type:'bar',data:{labels:Object.keys(t),datasets:[{label:'Qtd',data:Object.values(t),backgroundColor:'#4e73df'}]}}); }catch(e){} }
+     async function carregarAniversariantes() { try{const r=await fetch(API.func); const l=await r.json(); const m=new Date().getMonth()+1; const li=l.filter(f=>f.dataNascimento&&parseInt(f.dataNascimento.split('-')[1])==m); document.getElementById('lista-aniversariantes').innerHTML=li.map(f=>`<div class="d-flex justify-content-between px-3 w-100"><span>${safeStr(f.nome.split(' ')[0])}</span><span>${f.dataNascimento.split('-')[2]}/${m}</span></div>`).join('');}catch(e){} }
+
+     async function abrirGestaoUsuarios() { modalGestao.show(); const r=await fetch(API.admin); const l=await r.json(); document.getElementById('lista-usuarios-admin').innerHTML=l.map(u=>`<tr><td>${u.login}</td><td>${u.papel}</td><td><button class="btn btn-sm btn-dark" onclick="abrirEdicaoUsuario(${u.id},'${u.papel}',${u.ativo})">Edit</button></td></tr>`).join(''); }
+     function abrirEdicaoUsuario(id,p,a) { document.getElementById('editUserId').value=id; document.getElementById('editUserPapel').value=p.replace('ROLE_',''); document.getElementById('editUserAtivo').checked=a; modalEditUser.show(); }
+     async function salvarEdicaoAdmin() { const id=document.getElementById('editUserId').value; const p={papel:document.getElementById('editUserPapel').value, ativo:document.getElementById('editUserAtivo').checked}; await fetch(`/admin/usuario/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}); modalEditUser.hide(); }
+
+     function showToast(msg, type='success') { const bg=type==='error'?'bg-danger':'bg-success'; document.getElementById('toastContainer').insertAdjacentHTML('beforeend', `<div class="toast align-items-center text-white ${bg} border-0 show mb-2"><div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`); setTimeout(()=>document.querySelector('.toast.show').remove(),3000); }
+     function verImagemGrande(src) { document.getElementById('imgGrandeSrc').src=src; new bootstrap.Modal(document.getElementById('modalImagemGrande')).show(); }
+     function abrirModalChamado(){ document.getElementById('chamadoSolicitante').value=''; modalChamado.show(); }
+     function toggleTheme() {
+         document.body.classList.toggle('dark-mode');
+         const isDark = document.body.classList.contains('dark-mode');
+         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+     }
+     function setLoading(id,s) { const b=document.getElementById(id); if(!b)return; if(s){b.dataset.o=b.innerHTML;b.innerHTML='...';b.disabled=true;}else{b.innerHTML=b.dataset.o||'Salvar';b.disabled=false;} }
+     function lerFoto(i,h,p){ const f=document.getElementById(i).files[0]; if(f){const r=new FileReader(); r.onload=e=>{document.getElementById(h).value=e.target.result; if(p)document.getElementById(p).src=e.target.result; if(p)document.getElementById(p).style.display='block';}; r.readAsDataURL(f);} }
+     function filtrarWiki() { const t=document.getElementById('buscaWiki').value.toLowerCase(); document.querySelectorAll('.tab-pane.active .list-group-item').forEach(d=>{d.style.display=d.innerText.toLowerCase().includes(t)?'':'none';}); }
+
+     // Carregar Cardápio
+     async function carregarCardapio() { const c = document.getElementById('lista-cardapio'); if(!c) return; try { const r = await fetch(API.cardapio); const l = await r.json(); if (!l.length) { c.innerHTML = '<div class="text-center w-100 text-muted small">Cardápio vazio</div>'; return; } const getDiaIndex = (dia) => { const d = dia.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if(d.includes("seg")) return 1; if(d.includes("ter")) return 2; if(d.includes("qua")) return 3; if(d.includes("qui")) return 4; if(d.includes("sex")) return 5; if(d.includes("sab")) return 6; if(d.includes("dom")) return 7; return 99; }; l.sort((a,b) => getDiaIndex(a.diaSemana) - getDiaIndex(b.diaSemana)); const adm = (usuarioPapel === 'ADMIN' || usuarioPapel === 'NUTRICAO'); c.innerHTML = l.map(i => `<div class="menu-card-horizontal p-3 position-relative">${adm ? `<button class="btn btn-sm btn-link text-secondary position-absolute top-0 end-0 p-2" onclick="edtCard(${i.id},'${i.diaSemana}','${safeStr(i.pratoPrincipal)}','${safeStr(i.acompanhamento)}','${i.data||''}')"><i class="bi bi-pencil-fill"></i></button>` : ''}<div class="text-success small fw-bold border-bottom mb-2 pb-1 d-flex justify-content-between"><span>${i.diaSemana}</span><span class="text-dark bg-light px-2 rounded ms-2 small">${fmtData(i.data)}</span></div><div class="fw-bold text-dark mb-1">${i.pratoPrincipal || '---'}</div><small class="text-muted lh-1 d-block">${i.acompanhamento || ''}</small></div>`).join(''); } catch(e) {} }
+     function edtCard(id, ds, p, a, d) { document.getElementById('idCardapio').value = id; document.getElementById('diaCardapioDisplay').innerText = ds; document.getElementById('pratoCardapio').value = p; document.getElementById('acompCardapio').value = a; document.getElementById('dataCardapio').value = d; modalMenu.show(); }
+     async function salvarCardapio() { const d = { diaSemana: document.getElementById('diaCardapioDisplay').innerText, pratoPrincipal: document.getElementById('pratoCardapio').value, acompanhamento: document.getElementById('acompCardapio').value, data: document.getElementById('dataCardapio').value }; await fetch(`${API.cardapio}/${document.getElementById('idCardapio').value}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); modalMenu.hide(); carregarCardapio(); showToast("Salvo!"); }
+
+     // Carregar Galeria
+     async function carregarGaleria() { const c = document.getElementById('lista-albuns'); if(!c) return; c.innerHTML = '<div class="text-center w-100 py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>'; try { const r = await fetch(API.galeria); const l = await r.json(); if(!l.length) { c.innerHTML='<div class="text-center w-100 text-muted small py-3">Vazio</div>'; return; } const pode = (usuarioPapel === 'ADMIN' || usuarioPapel === 'ESCALA'); c.innerHTML = l.map(a => `<div class="card-album" onclick="abrirAlbum(${a.id}, '${safeStr(a.titulo)}')">${pode ? `<button class="btn-del-album" onclick="event.stopPropagation(); deletarAlbumDireto(${a.id})"><i class="bi bi-trash-fill"></i></button>` : ''}<img src="${a.capa || ''}" class="album-capa"><div class="album-titulo">${safeStr(a.titulo)}</div></div>`).join(''); } catch(e) { c.innerHTML = '<div class="text-center text-danger small">Erro.</div>'; } }
+     async function deletarAlbumDireto(id) { if(confirm("Excluir?")) { await fetch(`${API.galeria}/${id}`, {method: 'DELETE'}); carregarGaleria(); } }
+     async function salvarAlbum() { const btn = document.getElementById('btn-criar-album'); const t = document.getElementById('albumTitulo').value; const c = document.getElementById('albumCapaBase64').value; if(!t) return alert("Título?"); btn.disabled=true; await fetch(API.galeria, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({titulo:t, capa:c}) }); modalNovoAlbum.hide(); carregarGaleria(); btn.disabled=false; }
+     async function abrirAlbum(id, titulo) { document.getElementById('idAlbumAberto').value = id; document.getElementById('tituloAlbumAberto').innerText = titulo; document.getElementById('grade-fotos').innerHTML = '...'; modalVerAlbum.show(); const r = await fetch(`${API.galeria}/${id}/fotos`); const f = await r.json(); const adm = (usuarioPapel === 'ADMIN' || usuarioPapel === 'ESCALA'); document.getElementById('grade-fotos').innerHTML = f.length ? f.map((foto, i) => `<div class="col-6 col-md-3 col-lg-2"><div class="foto-grid-item position-relative"><img src="/galeria/foto/${foto.id}" class="foto-grid-img w-100 rounded shadow-sm" style="height:120px; object-fit:cover; cursor:zoom-in" onclick="verFotoCarrossel(${id}, ${i})">${adm ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 py-0 px-1 rounded" onclick="deletarFoto(${foto.id}, ${id})">×</button>` : ''}</div></div>`).join('') : 'Sem fotos'; }
+     async function enviarFoto() { const id = document.getElementById('idAlbumAberto').value; const input = document.getElementById('novaFotoFile'); if(!input.files.length) return; for(let i=0; i<input.files.length; i++) { const fd = new FormData(); fd.append('file', input.files[i]); await fetch(`${API.galeria}/${id}/fotos`, {method:'POST', body:fd}); } input.value=''; abrirAlbum(id, document.getElementById('tituloAlbumAberto').innerText); }
+     async function deletarFoto(id, idAlbum) { if(confirm("Apagar?")) await fetch(`${API.galeria}/foto/${id}`, {method:'DELETE'}); abrirAlbum(idAlbum, document.getElementById('tituloAlbumAberto').innerText); }
+     async function verFotoCarrossel(idAlbum, idx) { const r=await fetch(`${API.galeria}/${idAlbum}/fotos`); const f=await r.json(); document.getElementById('carousel-slides').innerHTML=f.map((x,i)=>`<div class="carousel-item ${i===idx?'active':''} h-100"><div class="d-flex align-items-center justify-content-center h-100 bg-black"><img src="/galeria/foto/${x.id}" class="d-block" style="max-height:95vh;max-width:100vw;object-fit:contain;"></div></div>`).join(''); new bootstrap.Modal(document.getElementById('modalCarrossel')).show(); }
+
+     async function carregarEnquetes() { const c = document.getElementById('secao-enquete-footer'); if(!c) return; try { const r = await fetch('/enquetes/ativa'); if(r.status===204) { c.style.display = (usuarioPapel==='ADMIN') ? 'block' : 'none'; document.getElementById('enquete-conteudo-visual').innerHTML = (usuarioPapel==='ADMIN') ? `<div class="text-center py-4"><p class="text-muted small mb-2">Nenhuma enquete ativa.</p><button class="btn btn-sm btn-primary rounded-pill px-3" onclick="modalNovaEnquete.show()">Criar Nova</button></div>` : ''; return; } const e = await r.json(); c.style.display='block'; const total=(e.votos1||0)+(e.votos2||0); const p1=total===0?0:Math.round((e.votos1/total)*100); const p2=total===0?0:Math.round((e.votos2/total)*100); document.getElementById('enquete-conteudo-visual').innerHTML=`<div class="mb-3 text-center fw-bold text-dark">${safeStr(e.pergunta)}</div><div class="mb-2" style="cursor:pointer;" onclick="votarEnquete(${e.id}, 1)"><div class="d-flex justify-content-between small mb-1"><span>${safeStr(e.opcao1)}</span><span class="fw-bold">${p1}%</span></div><div class="progress" style="height: 10px;"><div class="progress-bar bg-info" style="width: ${p1}%"></div></div></div><div class="mb-2" style="cursor:pointer;" onclick="votarEnquete(${e.id}, 2)"><div class="d-flex justify-content-between small mb-1"><span>${safeStr(e.opcao2)}</span><span class="fw-bold">${p2}%</span></div><div class="progress" style="height: 10px;"><div class="progress-bar bg-warning" style="width: ${p2}%"></div></div></div><div class="text-end text-muted" style="font-size:0.7rem">${total} votos total</div>${usuarioPapel === 'ADMIN' ? `<div class="text-center mt-2 border-top pt-2"><button class="btn btn-sm btn-link text-danger p-0 text-decoration-none small" onclick="deletarEnquete(${e.id})"><i class="bi bi-x-circle"></i> Encerrar Enquete</button></div>` : ''}`; } catch(e){} }
+     async function criarEnquete() { const p = document.getElementById('enqPergunta').value; const o1 = document.getElementById('enqOp1').value; const o2 = document.getElementById('enqOp2').value; if(!p || !o1 || !o2) return alert("Preencha tudo."); await fetch('/enquetes', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ pergunta: p, opcao1: o1, opcao2: o2, ativa: true }) }); modalNovaEnquete.hide(); document.getElementById('enqPergunta').value=''; document.getElementById('enqOp1').value=''; document.getElementById('enqOp2').value=''; carregarEnquetes(); showToast("Criada!"); }
+     async function votarEnquete(id, opcao) { if(localStorage.getItem(`votou_enquete_${id}`)) return alert("Já votou!"); await fetch(`/enquetes/${id}/votar/${opcao}`, { method: 'POST' }); localStorage.setItem(`votou_enquete_${id}`, 'true'); carregarEnquetes(); showToast("Voto computado!"); }
+     async function deletarEnquete(id) { if(confirm("Encerrar?")) { await fetch(`/enquetes/${id}`, { method: 'DELETE' }); carregarEnquetes(); if(modalNovaEnquete) modalNovaEnquete.hide(); } }
+
+     async function carregarDocumentos(pasta) { const c = document.getElementById(`lista-doc-${pasta}`); if(!c) return; c.innerHTML = '<div class="text-center py-2"><span class="spinner-border spinner-border-sm text-muted"></span></div>'; try { const r = await fetch(`/documentos/pasta/${pasta}`); const l = await r.json(); if(!l.length) { c.innerHTML='<div class="text-center text-muted small py-3">Vazio</div>'; return; } const adm = (usuarioPapel === 'ADMIN' || usuarioPapel === 'ESCALA'); c.innerHTML = l.map(d => { const isVideo = d.tipo === 'video' || (d.linkVideo && d.linkVideo.trim() !== ''); const icon = isVideo ? 'bi-youtube text-danger' : 'bi-file-earmark-text-fill text-primary'; const clickAction = isVideo ? `window.open('${d.linkVideo}', '_blank')` : `window.open('/documentos/${d.id}/visualizar', '_blank')`; return `<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2 border-0 border-bottom"><div style="cursor:pointer; flex-grow:1;" onclick="${clickAction}"><i class="bi ${icon} me-2 fs-5"></i><span class="small fw-bold text-dark">${safeStr(d.titulo)}</span>${d.descricao ? `<br><small class="text-muted ms-4">${safeStr(d.descricao)}</small>` : ''}</div>${adm ? `<button class="btn btn-sm text-danger border-0" onclick="deletarDoc(${d.id},'${pasta}')"><i class="bi bi-trash"></i></button>` : ''}</div>`; }).join(''); } catch(e) { c.innerHTML = '<div class="text-center text-danger small">Erro.</div>'; } }
+     async function uploadDocumento() { const btn = document.querySelector('#modalDoc .modal-footer button'); const titulo = document.getElementById('docTitulo').value; const pasta = document.getElementById('docPasta').value; const arquivo = document.getElementById('docArquivo').files[0]; if(!titulo) return alert("Título?"); if(btn) { btn.disabled=true; btn.innerHTML='...'; } const fd = new FormData(); fd.append('titulo', titulo); fd.append('descricao', document.getElementById('docDescricao').value); fd.append('pasta', pasta); fd.append('linkVideo', document.getElementById('docVideo').value); if(arquivo) fd.append('arquivo', arquivo); await fetch('/documentos', { method: 'POST', body: fd }); modalDoc.hide(); document.getElementById('docTitulo').value=''; document.getElementById('docArquivo').value=''; showToast("Salvo!"); carregarDocumentos(pasta); if(btn) { btn.disabled=false; btn.innerHTML='Salvar'; } }
+     async function deletarDoc(id, pasta) { if(confirm("Excluir?")) { await fetch(`/documentos/${id}`, {method: 'DELETE'}); carregarDocumentos(pasta); } }
+
+     async function carregarAuditoria() { const tb = document.getElementById('tabela-auditoria'); if(!tb) return; try { const r = await fetch('/admin/auditoria'); if(r.status === 403) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">Acesso Negado.</td></tr>'; return; } const l = await r.json(); if(l.length === 0) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Vazio.</td></tr>'; return; } tb.innerHTML = l.map(log => { const d = new Date(log.dataHora).toLocaleString(); let badgeClass = 'bg-secondary'; if(log.acao === 'EXCLUSÃO') badgeClass = 'bg-danger'; else if(log.acao === 'ALTERAÇÃO') badgeClass = 'bg-warning text-dark'; else if(log.acao === 'CRIAÇÃO') badgeClass = 'bg-success'; return `<tr><td class="small text-muted">${d}</td><td class="fw-bold">${safeStr(log.usuario)}</td><td><span class="badge ${badgeClass}">${log.acao}</span></td><td><span class="badge bg-light text-dark border">${log.modulo}</span></td><td class="small text-secondary">${safeStr(log.detalhes)}</td></tr>`; }).join(''); } catch(e) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro.</td></tr>'; } }
+</script>
+</body>
+</html>
