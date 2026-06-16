@@ -31,18 +31,18 @@ public class SetupDataLoader implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
         // 1. Cria Admin
-        if (usuarioRepository.findByLogin("hmlmb") == null) {
+        if (usuarioRepository.findByLogin("admin") == null) {
             Funcionario adminProfile = new Funcionario();
             adminProfile.setNome("Administrador");
             adminProfile.setCargo("Gestão TI");
             adminProfile.setSetor("TI");
             adminProfile.setRamal("0000");
-            adminProfile.setEmail("ti@intrahub.com");
+            adminProfile.setEmail("ti@corphub.com");
             adminProfile.setAtivo(true);
             adminProfile = funcionarioRepository.save(adminProfile);
 
             Usuario admin = new Usuario();
-            admin.setLogin("hmlmb");
+            admin.setLogin("admin");
             admin.setSenha(passwordEncoder.encode("123456"));
             admin.setPapel("ADMIN");
             admin.setAtivo(true);

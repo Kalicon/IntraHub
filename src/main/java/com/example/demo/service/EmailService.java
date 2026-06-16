@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -13,10 +14,12 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     // E-mail que receberá os chamados e solicitações administrativas
-    private static final String EMAIL_DESTINO_ADMIN = "hmlmb-rhfrequencia@saude.sp.gov.br";
+    @Value("${app.mail.admin-destination:admin@corphub.com}")
+    private String emailDestinoAdmin;
 
     // E-mail que aparecerá como remetente
-    private static final String REMETENTE = "naorespondahmlmb@gmail.com";
+    @Value("${spring.mail.username:naorespondahmlmb@gmail.com}")
+    private String remetente;
 
     // --- 1. NOTIFICAÇÃO DE TI ---
     public void notificarTI(String solicitante, String ramal, String titulo, String descricao) {
@@ -26,7 +29,7 @@ public class EmailService {
                 "Assunto: " + titulo + "\n" +
                 "Detalhes: " + descricao;
 
-        enviarEmail(EMAIL_DESTINO_ADMIN, assunto, corpo);
+        enviarEmail(emailDestinoAdmin, assunto, corpo);
     }
 
     // --- 2. NOTIFICAÇÃO DE MANUTENÇÃO ---
@@ -37,7 +40,7 @@ public class EmailService {
                 "Tipo: " + tipo + "\n\n" +
                 "Descrição: " + descricao;
 
-        enviarEmail(EMAIL_DESTINO_ADMIN, assunto, corpo);
+        enviarEmail(emailDestinoAdmin, assunto, corpo);
     }
 
     // --- 3. NOTIFICAÇÃO DE RESERVA DE SALA ---
@@ -51,7 +54,7 @@ public class EmailService {
                 "Motivo: " + motivo + "\n\n" +
                 "Por favor, verifique a disponibilidade no sistema.";
 
-        enviarEmail(EMAIL_DESTINO_ADMIN, assunto, corpo);
+        enviarEmail(emailDestinoAdmin, assunto, corpo);
     }
 
     // --- 4. CONFIRMAÇÃO DE INSCRIÇÃO ---
@@ -85,7 +88,7 @@ public class EmailService {
     public void enviarEmail(String para, String assunto, String texto) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(REMETENTE);
+            message.setFrom(remetente);
             message.setTo(para);
             message.setSubject(assunto);
             message.setText(texto);
