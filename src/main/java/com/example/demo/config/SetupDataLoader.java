@@ -30,13 +30,19 @@ public class SetupDataLoader implements CommandLineRunner {
     @Autowired private ManutencaoRepository manutencaoRepository;
     @Autowired private SetorRepository setorRepository;
     @Autowired private MaterialRepository materialRepository;
+    @Autowired private com.example.demo.service.LicenseService licenseService;
+    @Autowired private com.example.demo.repository.LicencaSistemaRepository licencaRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         
-        // 1. Setores
+        // 0. Licenciamento Anual do Sistema
+        if (licencaRepository.count() == 0) {
+            String chaveMaster = licenseService.gerarChaveAnual("12345678000199", "Hospital e Maternidade Modelo IntraHub", 1);
+            licenseService.ativarChave(chaveMaster);
+        }
         if (setorRepository.count() == 0) {
             String[] nomesSetores = {"UTI Adulto", "Emergência", "Centro Cirúrgico", "Enfermaria", "Cardiologia", "Recursos Humanos", "Tecnologia da Informação", "Manutenção & Engenharia", "Almoxarifado", "Nutrição & Dietética"};
             for (String s : nomesSetores) {

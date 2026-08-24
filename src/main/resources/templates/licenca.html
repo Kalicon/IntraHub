@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntraHub - Gestão de Licenciamento Anual</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary: #0080ff;
+            --dark-bg: #090e14;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background: radial-gradient(at 0% 0%, rgba(0, 128, 255, 0.12) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(28, 200, 138, 0.08) 0px, transparent 50%),
+                        var(--dark-bg);
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #ffffff;
+            padding-bottom: 4rem;
+        }
+
+        .card-custom {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2rem;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-radius: 12px;
+        }
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 128, 255, 0.2);
+        }
+
+        .badge-status-valida {
+            background: rgba(28, 200, 138, 0.15);
+            color: #1cc88a;
+            border: 1px solid rgba(28, 200, 138, 0.3);
+        }
+        .badge-status-expirada {
+            background: rgba(231, 74, 59, 0.15);
+            color: #e74a3b;
+            border: 1px solid rgba(231, 74, 59, 0.3);
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="container" style="max-width: 900px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <img src="/logo.png" alt="IntraHub Logo" style="width: 42px; height: 42px; object-fit: contain;">
+            <div>
+                <h3 class="fw-bold mb-0">IntraHub <span class="text-primary">Licenciamento</span></h3>
+                <p class="text-secondary small mb-0">Gerenciamento de Assinatura Comercial & Chave Anual</p>
+            </div>
+        </div>
+        <a href="/" class="btn btn-outline-light rounded-pill px-4"><i class="bi bi-house me-1"></i> Voltar ao Sistema</a>
+    </div>
+
+    <!-- Status Card -->
+    <div class="card-custom mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-key-fill text-warning me-2"></i> Status da Assinatura Atual</h5>
+            <span class="badge px-3 py-2 rounded-pill fs-6" 
+                  th:classappend="${valida ? 'badge-status-valida' : 'badge-status-expirada'}"
+                  th:text="${valida ? '🟢 LICENÇA ATIVA' : '🔴 LICENÇA EXPIRADA'}">
+                STATUS
+            </span>
+        </div>
+
+        <div class="row g-3" th:if="${licenca != null}">
+            <div class="col-md-6">
+                <div class="small text-secondary">Cliente / Razão Social</div>
+                <div class="fw-bold fs-5 text-light" th:text="${licenca.clienteRazaoSocial}">Empresa Modelo</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-secondary">CNPJ Registrado</div>
+                <div class="fw-bold fs-5 text-light" th:text="${licenca.cnpj}">00.000.000/0001-00</div>
+            </div>
+            <div class="col-md-4">
+                <div class="small text-secondary">Plano Contratado</div>
+                <div class="fw-bold text-info" th:text="${licenca.plano}">ENTERPRISE_HEALTH</div>
+            </div>
+            <div class="col-md-4">
+                <div class="small text-secondary">Data de Expiração</div>
+                <div class="fw-bold text-warning" th:text="${#temporals.format(licenca.dataValidade, 'dd/MM/yyyy')}">31/12/2026</div>
+            </div>
+            <div class="col-md-4">
+                <div class="small text-secondary">Dias Restantes de Contrato</div>
+                <div class="fw-bold fs-5 text-success" th:text="${diasRestantes + ' dias'}">365 dias</div>
+            </div>
+        </div>
+        <div th:if="${licenca == null}" class="text-center py-3 text-secondary">
+            Nenhuma licença ativa encontrada no banco de dados.
+        </div>
+    </div>
+
+    <!-- Activation Form -->
+    <div class="card-custom mb-4">
+        <h5 class="fw-bold mb-2"><i class="bi bi-shield-lock-fill text-primary me-2"></i> Ativar / Renovar Chave de Acesso Anual</h5>
+        <p class="small text-secondary mb-3">Insira a nova chave criptografada fornecida comercialmente para renovar o acesso por mais 1 ano.</p>
+
+        <div class="mb-3">
+            <label class="small text-secondary mb-1">Chave de Licença Anual (Base64 Master Key)</label>
+            <textarea id="chaveInput" class="form-control font-monospace" rows="3" placeholder="Cole aqui a chave comercial (ex: INTRAHUB-LIC-...)"></textarea>
+        </div>
+
+        <button onclick="ativarLicenca()" class="btn btn-primary fw-bold rounded-pill px-4">
+            <i class="bi bi-check-circle-fill me-1"></i> Validar e Ativar Licença
+        </button>
+    </div>
+
+    <!-- Commercial License Generator for Demo/Sales -->
+    <div class="card-custom">
+        <h5 class="fw-bold mb-2"><i class="bi bi-sliders text-info me-2"></i> Gerador Comercial de Chave Anual (Dev / Vendas)</h5>
+        <p class="small text-secondary mb-3">Ferramenta para geração de novas chaves anuais para demonstração a clientes e hospitais.</p>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="small text-secondary">CNPJ do Hospital / Cliente</label>
+                <input type="text" id="devCnpj" class="form-control form-control-sm" value="99.888.777/0001-55">
+            </div>
+            <div class="col-md-6">
+                <label class="small text-secondary">Razão Social do Cliente</label>
+                <input type="text" id="devRazao" class="form-control form-control-sm" value="Hospital Santa Helena S/A">
+            </div>
+        </div>
+
+        <button onclick="gerarChaveDev()" class="btn btn-outline-info rounded-pill px-4 btn-sm mb-3">
+            <i class="bi bi-key me-1"></i> Gerar Nova Chave de 1 Ano
+        </button>
+
+        <div id="resultadoGerador" class="d-none">
+            <label class="small text-success fw-bold">Chave Comercial Gerada (Copiável):</label>
+            <textarea id="chaveGeradaOutput" class="form-control font-monospace form-control-sm text-info" rows="3" readonly></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function ativarLicenca() {
+        const chave = document.getElementById('chaveInput').value.trim();
+        if(!chave) return alert("Por favor, cole a chave de licença.");
+
+        try {
+            const resp = await fetch('/api/v1/licenca/ativar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chaveLicenca: chave })
+            });
+
+            const data = await resp.json();
+            if(data.sucesso) {
+                alert("🎉 " + data.mensagem);
+                window.location.reload();
+            } else {
+                alert("❌ " + data.mensagem);
+            }
+        } catch(e) {
+            alert("Erro ao validar licença.");
+        }
+    }
+
+    async function gerarChaveDev() {
+        const cnpj = document.getElementById('devCnpj').value;
+        const razaoSocial = document.getElementById('devRazao').value;
+
+        try {
+            const resp = await fetch('/api/v1/licenca/gerar-dev', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cnpj, razaoSocial, anos: 1 })
+            });
+
+            const data = await resp.json();
+            if(data.sucesso) {
+                document.getElementById('resultadoGerador').classList.remove('d-none');
+                document.getElementById('chaveGeradaOutput').value = data.chaveGerada;
+            }
+        } catch(e) {
+            alert("Erro ao gerar chave.");
+        }
+    }
+</script>
+
+</body>
+</html>

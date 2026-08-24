@@ -116,6 +116,16 @@ O **IntraHub** aplica o princípio do menor privilégio (*Least Privilege*):
 
 ---
 
+## 🔑 Modelo Comercial de Licenciamento Anual (Rentabilidade & Escalabilidade)
+
+O **IntraHub** possui uma arquitetura pronta para **monetização recorrente** (*SaaS / On-Premise Enterprise Licensing*):
+
+* 📜 **Chave de Acesso Criptografada (Assinatura HMAC-SHA256):** O sistema requer uma chave de licença anual assinada digitalmente contendo CNPJ do cliente, plano e data de expiração (1 ano de validade).
+* ⏳ **Controle Automático de Validade (`LicenseService`):** Validação em tempo real do período contratado (com exibição dos dias restantes e alertas automáticos de renovação).
+* 🖥️ **Portal de Licenciamento (`/licenca`):** Painel administrativo para inserção de novas chaves anuais e gerador de chaves comerciais para suporte/vendas.
+
+---
+
 ## 🚀 Como Executar o Projetos Localmente
 
 ### **Pré-requisitos**
