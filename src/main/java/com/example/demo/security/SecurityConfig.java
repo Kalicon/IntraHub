@@ -23,7 +23,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**", "/auth/**", "/h2-console/**", "/chamados/**", "/manutencao/**", "/reservas/**")
+                        .ignoringRequestMatchers("/api/**", "/auth/**", "/h2-console/**", "/chamados/**", "/manutencao/**", "/reservas/**", "/health/**")
                 )
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.sameOrigin())
@@ -32,8 +32,8 @@ public class SecurityConfig {
                         // 1. Recursos Estáticos Públicos
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico", "/logo.png").permitAll()
 
-                        // 2. Páginas e fluxos públicos (e console do H2 / Swagger UI)
-                        .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        // 2. Páginas e fluxos públicos (e console do H2 / Swagger UI / Hospital Health)
+                        .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/health", "/health/**", "/health/dashboard", "/health/leitos", "/health/triagem", "/health/sbar", "/health/protocolos", "/health/incidentes").permitAll()
                         .requestMatchers(HttpMethod.POST, "/ouvidoria/api/enviar").permitAll()
 
                         // 3. Cadastros Públicos (Solicitações via Formulário sem login)

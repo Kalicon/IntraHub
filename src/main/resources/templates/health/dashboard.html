@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntraHub Health - Dashboard Hospitalar</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary: #0080ff;
+            --danger: #e74a3b;
+            --warning: #f6c23e;
+            --success: #1cc88a;
+            --dark-bg: #090e14;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-muted: #8a96a3;
+        }
+
+        body {
+            background: radial-gradient(at 0% 0%, rgba(0, 128, 255, 0.1) 0px, transparent 50%),
+                        radial-gradient(at 100% 0%, rgba(231, 74, 59, 0.08) 0px, transparent 40%),
+                        var(--dark-bg);
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #ffffff;
+            padding-bottom: 3rem;
+        }
+
+        .navbar-health {
+            background: rgba(9, 14, 20, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 128, 255, 0.3);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top navbar-health py-3 mb-4">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center fw-bold" href="/">
+            <img src="/logo.png" alt="IntraHub Logo" class="me-2" style="width: 36px; height: 36px; object-fit: contain;">
+            <span>IntraHub <span class="text-primary">Health</span></span>
+        </a>
+        
+        <div class="d-flex align-items-center gap-2">
+            <a href="/health/triagem" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="bi bi-activity me-1"></i> Triagem</a>
+            <a href="/health/leitos" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="bi bi-hospital me-1"></i> Leitos</a>
+            <a href="/health/sbar" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="bi bi-clipboard2-pulse me-1"></i> SBAR</a>
+            <a href="/health/protocolos" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="bi bi-shield-exclamation me-1"></i> Protocolos</a>
+            <a href="/health/incidentes" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="bi bi-exclamation-triangle me-1"></i> Segurança</a>
+            <a href="/" class="btn btn-sm btn-primary rounded-pill px-3 ms-2"><i class="bi bi-house me-1"></i> Intranet</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-heart-pulse-fill text-danger me-2"></i> Painel de Operações Hospitalares</h3>
+            <p class="text-secondary mb-0">Monitoramento clínico e ocupação em tempo real</p>
+        </div>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+            <i class="bi bi-broadcast me-1"></i> Sistema Operacional Online
+        </span>
+    </div>
+
+    <!-- Stat Cards Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-secondary small fw-bold mb-1">TAXA DE OCUPAÇÃO</div>
+                    <div class="fs-2 fw-bold" th:text="${taxaOcupacao + '%'}">0%</div>
+                    <div class="small text-muted" th:text="${leitosOcupados + ' de ' + totalLeitos + ' leitos'}">0 de 0</div>
+                </div>
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-hospital"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-secondary small fw-bold mb-1">PACIENTES EM ATENDIMENTO</div>
+                    <div class="fs-2 fw-bold text-info" th:text="${atendimentosAtivos}">0</div>
+                    <div class="small text-muted">Prontuários Abertos</div>
+                </div>
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-secondary small fw-bold mb-1">PROTOCOLOS CRÍTICOS (SEPSE/AVC)</div>
+                    <div class="fs-2 fw-bold text-warning" th:text="${protocolosAbertos}">0</div>
+                    <div class="small text-muted">Acompanhamento SLA</div>
+                </div>
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-shield-exclamation"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-secondary small fw-bold mb-1">ALERTA NEWS2 (ALTO RISCO)</div>
+                    <div class="fs-2 fw-bold text-danger" th:text="${pacientesCriticosNEWS2}">0</div>
+                    <div class="small text-muted">Deterioração Clínica</div>
+                </div>
+                <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                    <i class="bi bi-exclamation-octagon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Action Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h5 class="fw-bold mb-2"><i class="bi bi-activity text-primary me-2"></i> Triagem de Manchester</h5>
+                <p class="small text-secondary mb-3">Recepção de emergência e classificação de gravidade com SLA automático.</p>
+                <a href="/health/triagem" class="btn btn-sm btn-outline-primary rounded-pill w-100">Abrir Triagem</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h5 class="fw-bold mb-2"><i class="bi bi-clipboard2-pulse text-warning me-2"></i> Passagem de Plantão SBAR</h5>
+                <p class="small text-secondary mb-3">Transferência estruturada de turno entre enfermeiros e médicos sem perda de contexto.</p>
+                <a href="/health/sbar" class="btn btn-sm btn-outline-warning rounded-pill w-100">Registrar Plantão</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h5 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle text-danger me-2"></i> Segurança do Paciente (ANVISA)</h5>
+                <p class="small text-secondary mb-3">Notificação sigilosa e anônima de incidentes e eventos adversos.</p>
+                <a href="/health/incidentes" class="btn btn-sm btn-outline-danger rounded-pill w-100">Notificar Evento</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
