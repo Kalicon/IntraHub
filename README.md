@@ -4,8 +4,8 @@
   <img src="https://img.shields.io/badge/Java-17-orange.svg?style=for-the-badge&logo=openjdk" alt="Java 17">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.2.3-brightgreen.svg?style=for-the-badge&logo=springboot" alt="Spring Boot 3">
   <img src="https://img.shields.io/badge/Spring%20Security-6-blue.svg?style=for-the-badge&logo=springsecurity" alt="Spring Security 6">
-  <img src="https://img.shields.io/badge/Frontend-Thymeleaf%20%7C%20Bootstrap%205-blueviolet.svg?style=for-the-badge&logo=bootstrap" alt="Frontend">
-  <img src="https://img.shields.io/badge/Database-H2%20%7C%20PostgreSQL-navy.svg?style=for-the-badge&logo=postgresql" alt="Database">
+  <img src="https://img.shields.io/badge/Swagger%20OpenAPI-3.0-lightgrey.svg?style=for-the-badge&logo=swagger" alt="Swagger OpenAPI 3">
+  <img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue.svg?style=for-the-badge&logo=githubactions" alt="GitHub Actions CI/CD">
   <img src="https://img.shields.io/badge/Status-Ativo%20%2F%20Portf%C3%B3lio-success.svg?style=for-the-badge" alt="Status">
 </p>
 
@@ -27,6 +27,8 @@ Este projeto foi estruturado e desenvolvido como um **demonstrativo de Engenhari
 * **Segurança:** Spring Security 6 (Criptografia BCrypt, `@EnableMethodSecurity`, Proteção CSRF seletiva e RBAC)
 * **Persistência de Dados:** Spring Data JPA / Hibernate ORM
 * **Banco de Dados:** H2 Database (desenvolvimento com arquivo persistente local `./data/intrahubdb`) | Suporte nativo a PostgreSQL
+* **Documentação de API:** OpenAPI 3 / Swagger UI (`springdoc-openapi`)
+* **Tratamento de Exceções:** ControllerAdvice Global com tratamento customizado de erros (404/500)
 * **Utilitários Corporativos:** Lombok (redução de boilerplate), Apache POI (exportação e relatórios Excel)
 
 ### **Frontend & Interface**
@@ -144,6 +146,7 @@ O **IntraHub** aplica o princípio do menor privilégio (*Least Privilege*):
 
 4. **Acessar no Navegador**:
    - **URL Principal:** [http://localhost:8080](http://localhost:8080)
+   - **Documentação de API (Swagger UI):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
    - **Console do Banco H2:** [http://localhost:8080/h2-console](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:file:./data/intrahubdb`, Usuário: `sa`, Senha: `password`)
 
 ---

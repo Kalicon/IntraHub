@@ -32,8 +32,8 @@ public class SecurityConfig {
                         // 1. Recursos Estáticos Públicos
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico", "/logo.png").permitAll()
 
-                        // 2. Páginas e fluxos públicos (e console do H2)
-                        .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**").permitAll()
+                        // 2. Páginas e fluxos públicos (e console do H2 / Swagger UI)
+                        .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/ouvidoria/api/enviar").permitAll()
 
                         // 3. Cadastros Públicos (Solicitações via Formulário sem login)
