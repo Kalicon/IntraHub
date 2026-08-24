@@ -41,6 +41,7 @@ public class SecurityConfig {
 
                         // 2. Páginas e fluxos públicos (e console do H2 / Swagger UI / Hospital Health)
                         .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/health", "/health/**", "/health/dashboard", "/health/leitos", "/health/triagem", "/health/sbar", "/health/protocolos", "/health/incidentes").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/**", "/cardapios/**", "/eventos/**", "/avisos/**", "/links/**", "/enquetes/**", "/funcionarios/**", "/frota/**", "/achados/**", "/galeria/**", "/chamados/**", "/manutencao/**", "/salas/**", "/reservas/**", "/api/whatsapp/**", "/sessao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/ouvidoria/api/enviar").permitAll()
 
                         // 3. Cadastros Públicos (Solicitações via Formulário sem login)
