@@ -76,8 +76,8 @@ src/main/java/com/example/demo/
 
 1. Clone este repositório para a sua máquina local:
    ```bash
-   git clone https://github.com/Kalicon/intranet-hmlmb.git
-   cd intranet-hmlmb
+   git clone https://github.com/Kalicon/IntraHub.git
+   cd IntraHub
    ```
 
 2. Execute o build e a compilação do projeto para baixar as dependências:
