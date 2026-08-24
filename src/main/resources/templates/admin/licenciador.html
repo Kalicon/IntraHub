@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntraHub Master - Painel de Licenciamento Remoto</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary: #0080ff;
+            --dark-bg: #090e14;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background: radial-gradient(at 0% 0%, rgba(246, 194, 62, 0.12) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(0, 128, 255, 0.1) 0px, transparent 50%),
+                        var(--dark-bg);
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #ffffff;
+            padding-bottom: 4rem;
+        }
+
+        .card-custom {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2rem;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-radius: 12px;
+        }
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: #f6c23e;
+            box-shadow: 0 0 15px rgba(246, 194, 62, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="container" style="max-width: 950px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <img src="/logo.png" alt="IntraHub Logo" style="width: 42px; height: 42px; object-fit: contain;">
+            <div>
+                <h3 class="fw-bold mb-0">Portal do Licenciador <span class="text-warning">Master</span></h3>
+                <p class="text-secondary small mb-0">Emissão de Chaves Comerciais & Gerenciamento Remoto de Planos</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/licenca" class="btn btn-outline-warning rounded-pill px-3"><i class="bi bi-key me-1"></i> Minha Licença</a>
+            <a href="/" class="btn btn-outline-light rounded-pill px-3"><i class="bi bi-house me-1"></i> Intranet</a>
+        </div>
+    </div>
+
+    <!-- Master Generator Card -->
+    <div class="card-custom mb-4">
+        <h5 class="fw-bold mb-2 text-warning"><i class="bi bi-shield-lock text-warning me-2"></i> Emitir Nova Chave de Acesso Comercial</h5>
+        <p class="small text-secondary mb-3">Selecione o plano contratado pelo hospital ou empresa para gerar a chave de ativação remota assinada com HMAC-SHA256.</p>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="small text-secondary mb-1">CNPJ da Empresa / Hospital</label>
+                <input type="text" id="cnpjCliente" class="form-control" placeholder="00.000.000/0001-00" value="12.345.678/0001-99">
+            </div>
+            <div class="col-md-6">
+                <label class="small text-secondary mb-1">Razão Social do Cliente</label>
+                <input type="text" id="razaoCliente" class="form-control" placeholder="Nome do Hospital / Empresa" value="Hospital Santa Clara de Saúde S/A">
+            </div>
+            <div class="col-md-6">
+                <label class="small text-secondary mb-1">Plano de Contrato & Validade</label>
+                <select id="planoSelecionado" class="form-select">
+                    <option value="ANUAL">📅 Plano Anual (12 Meses / 1 Ano)</option>
+                    <option value="MEDIO_PRAZO">⏳ Plano Médio Prazo (36 Meses / 3 Anos)</option>
+                    <option value="QUINQUENAL">👑 Plano Quinquenal (60 Meses / 5 Anos)</option>
+                    <option value="VITALICIO">♾️ Plano Vitalício / Customizado (100 Anos)</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="small text-secondary mb-1">Módulos Incluídos</label>
+                <input type="text" class="form-control text-success fw-bold" value="ENTERPRISE_HEALTH (Intranet + Health + Suporte)" readonly>
+            </div>
+        </div>
+
+        <button onclick="gerarChaveMaster()" class="btn btn-warning fw-bold rounded-pill px-4 text-dark">
+            <i class="bi bi-key-fill me-1"></i> Gerar Chave Comercial Criptografada
+        </button>
+
+        <div id="boxResultado" class="mt-4 d-none">
+            <div class="alert alert-warning border-warning bg-opacity-10 text-white rounded-3">
+                <h6 class="fw-bold mb-1 text-warning"><i class="bi bi-check-circle-fill me-1"></i> Chave Gerada com Sucesso!</h6>
+                <p class="small text-secondary mb-2">Envie o código criptografado abaixo para o Administrador do cliente inserir no portal <code>/licenca</code>.</p>
+                <textarea id="chaveMasterOutput" class="form-control font-monospace text-info form-control-sm" rows="3" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync & Remote Architecture Card -->
+    <div class="card-custom">
+        <h5 class="fw-bold mb-2"><i class="bi bi-cloud-arrow-up-fill text-info me-2"></i> Arquitetura de Sincronização Online do Banco Local</h5>
+        <p class="small text-secondary mb-3">Como o servidor hospitalar local se comunica com o servidor de licenciamento remoto:</p>
+
+        <div class="row g-3 text-secondary small">
+            <div class="col-md-4">
+                <div class="p-3 border border-secondary rounded-4 bg-dark bg-opacity-50">
+                    <div class="fw-bold text-light mb-1"><i class="bi bi-database me-1 text-primary"></i> 1. Banco de Dados Local</div>
+                    O banco H2/Postgres local armazena a chave ativada e valida a assinatura HMAC offline sem depender da internet.
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border border-secondary rounded-4 bg-dark bg-opacity-50">
+                    <div class="fw-bold text-light mb-1"><i class="bi bi-arrow-repeat me-1 text-warning"></i> 2. Checagem Diária HTTPS</div>
+                    Uma rotina em segundo plano consulta a API central remota para verificar revogações ou renovações automáticas.
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border border-secondary rounded-4 bg-dark bg-opacity-50">
+                    <div class="fw-bold text-light mb-1"><i class="bi bi-shield-check me-1 text-success"></i> 3. Modo Air-Gapped / Off-line</div>
+                    Caso a internet do hospital caia, o sistema permanece 100% operacional pela validação criptográfica em memória.
+                </div>
+            </div>
+        </div>
+
+        <button onclick="sincronizarAgora()" class="btn btn-outline-info rounded-pill px-4 btn-sm mt-3">
+            <i class="bi bi-arrow-clockwise me-1"></i> Testar Sincronização Online Agora
+        </button>
+    </div>
+</div>
+
+<script>
+    async function gerarChaveMaster() {
+        const cnpj = document.getElementById('cnpjCliente').value;
+        const razaoSocial = document.getElementById('razaoCliente').value;
+        const plano = document.getElementById('planoSelecionado').value;
+
+        try {
+            const resp = await fetch('/api/v1/licenca/gerar-master', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cnpj, razaoSocial, plano })
+            });
+
+            const data = await resp.json();
+            if(data.sucesso) {
+                document.getElementById('boxResultado').classList.remove('d-none');
+                document.getElementById('chaveMasterOutput').value = data.chaveGerada;
+            }
+        } catch(e) {
+            alert("Erro ao gerar chave master.");
+        }
+    }
+
+    async function sincronizarAgora() {
+        try {
+            const resp = await fetch('/api/v1/licenca/sincronizar-online', { method: 'POST' });
+            const data = await resp.json();
+            alert(data.mensagem + " (Dias Restantes: " + data.diasRestantes + ")");
+        } catch(e) {
+            alert("Erro na sincronização.");
+        }
+    }
+</script>
+
+</body>
+</html>

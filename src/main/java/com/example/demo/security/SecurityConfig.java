@@ -39,8 +39,8 @@ public class SecurityConfig {
                         // 1. Recursos Estáticos Públicos
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico", "/logo.png").permitAll()
 
-                        // 2. Páginas e fluxos públicos (e console do H2 / Swagger UI / Hospital Health / Licenciamento Anual)
-                        .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/health", "/health/**", "/health/dashboard", "/health/leitos", "/health/triagem", "/health/sbar", "/health/protocolos", "/health/incidentes", "/licenca", "/licenca/**", "/api/v1/licenca/**").permitAll()
+                        // 2. Páginas e fluxos públicos (e console do H2 / Swagger UI / Hospital Health / Licenciamento)
+                        .requestMatchers("/", "/login", "/auth/**", "/ouvidoria", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/health", "/health/**", "/health/dashboard", "/health/leitos", "/health/triagem", "/health/sbar", "/health/protocolos", "/health/incidentes", "/licenca", "/api/v1/licenca/status").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/**", "/cardapios/**", "/eventos/**", "/avisos/**", "/links/**", "/enquetes/**", "/funcionarios/**", "/frota/**", "/achados/**", "/galeria/**", "/chamados/**", "/manutencao/**", "/salas/**", "/reservas/**", "/api/whatsapp/**", "/sessao").permitAll()
                         .requestMatchers(HttpMethod.POST, "/ouvidoria/api/enviar").permitAll()
 
@@ -84,7 +84,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/salas/**", "/eventos/**", "/avisos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/salas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/inscricoes/evento/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/usuarios/**", "/api/v1/licenca/gerar-master", "/api/v1/licenca/gerar-dev").hasRole("ADMIN")
 
                         // 12. Regra Global de Deleção
                         .requestMatchers(HttpMethod.DELETE, "/**").hasRole("ADMIN")

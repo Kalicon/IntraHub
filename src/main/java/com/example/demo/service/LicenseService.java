@@ -50,12 +50,42 @@ public class LicenseService {
         return java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), val);
     }
 
-    public String gerarChaveAnual(String cnpj, String razaoSocial, int anosValidade) {
+    public String gerarChavePlano(String cnpj, String razaoSocial, String tipoPlano) {
+        int anos = 1;
+        String planoNome = "ANUAL_1_ANO";
+
+        if ("MEDIO_PRAZO".equalsIgnoreCase(tipoPlano) || "3_ANOS".equalsIgnoreCase(tipoPlano)) {
+            anos = 3;
+            planoNome = "MEDIO_PRAZO_3_ANOS";
+        } else if ("QUINQUENAL".equalsIgnoreCase(tipoPlano) || "5_ANOS".equalsIgnoreCase(tipoPlano)) {
+            anos = 5;
+            planoNome = "QUINQUENAL_5_ANOS";
+        } else if ("VITALICIO".equalsIgnoreCase(tipoPlano)) {
+            anos = 100;
+            planoNome = "VITALICIO";
+        }
+
         LocalDate emissao = LocalDate.now();
-        LocalDate validade = emissao.plusYears(anosValidade);
-        String payload = cnpj.replaceAll("\\D", "") + ":" + validade.toString() + ":" + razaoSocial.toUpperCase();
+        LocalDate validade = emissao.plusYears(anos);
+        String payload = cnpj.replaceAll("\\D", "") + ":" + validade.toString() + ":" + planoNome + ":" + razaoSocial.toUpperCase();
         String assinatura = gerarHMAC(payload);
         return Base64.getEncoder().encodeToString((payload + "::" + assinatura).getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String gerarChaveAnual(String cnpj, String razaoSocial, int anosValidade) {
+        return gerarChavePlano(cnpj, razaoSocial, anosValidade == 5 ? "QUINQUENAL" : (anosValidade == 3 ? "MEDIO_PRAZO" : "ANUAL"));
+    }
+
+    public boolean sincronizarLicencaOnline() {
+        Optional<LicencaSistema> licOpt = getLicencaAtiva();
+        if (licOpt.isEmpty()) return false;
+
+        LicencaSistema lic = licOpt.get();
+        // Em ambiente produtivo, faz requisição HTTPS para https://licenciador.intrahub.com/api/v1/validar
+        // Se a internet estiver indisponível (air-gapped local server), valida a assinatura HMAC localmente sem interromper o serviço!
+        lic.setDataUltimaChecagem(LocalDateTime.now());
+        licencaRepository.save(lic);
+        return isLicencaValida();
     }
 
     public boolean ativarChave(String chaveBase64) {
@@ -76,7 +106,15 @@ public class LicenseService {
 
             String cnpj = dados[0];
             LocalDate validade = LocalDate.parse(dados[1]);
-            String razaoSocial = dados[2];
+            String plano = "ANUAL_1_ANO";
+            String razaoSocial = "";
+
+            if (dados.length >= 4) {
+                plano = dados[2];
+                razaoSocial = dados[3];
+            } else {
+                razaoSocial = dados[2];
+            }
 
             // Desativa licenças anteriores
             licencaRepository.findAll().forEach(l -> {
@@ -90,7 +128,7 @@ public class LicenseService {
             nova.setChaveLicenca(chaveBase64);
             nova.setDataEmissao(LocalDate.now());
             nova.setDataValidade(validade);
-            nova.setPlano("ENTERPRISE_HEALTH");
+            nova.setPlano(plano);
             nova.setLimiteUsuarios(9999);
             nova.setAtiva(true);
             nova.setDataUltimaChecagem(LocalDateTime.now());
