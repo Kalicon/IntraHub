@@ -108,6 +108,12 @@ O **IntraHub** aplica o princípio do menor privilégio (*Least Privilege*):
 | **ESCALA / RH** | Edição de escalas, gestão de plantões e comunicados específicos. |
 | **ADMIN** | Acesso total: gestão de usuários, ouvidoria restrita, controle do almoxarifado, trilha de auditoria e exclusões. |
 
+### **Proteções Adicionais de Segurança (OWASP Hardening)**
+* 🛡️ **Proteção contra Ataques de Força Bruta (`LoginBruteForceProtectionService`):** Monitoramento contínuo de tentativas de login com bloqueio temporário de IP/usuário após 5 falhas consecutivas.
+* 🔒 **Blindagem de Sessão & Cookies:** Cookies com diretivas `HttpOnly`, `SameSite=Strict`, migração automática de ID de sessão (`migrateSession`) e expiração em 30 minutos.
+* 🛑 **Proteção XSS (`SecuritySanitizer`):** Escapamento e sanitização automatizada de caracteres perigosos em prontuários e formulários.
+* 🌐 **Cabeçalhos de Segurança HTTP:** Implementação de `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` e `Permissions-Policy` restrictiva.
+
 ---
 
 ## 🚀 Como Executar o Projetos Localmente

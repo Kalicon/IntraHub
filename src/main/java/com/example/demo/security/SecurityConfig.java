@@ -27,6 +27,13 @@ public class SecurityConfig {
                 )
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.sameOrigin())
+                        .contentTypeOptions(org.springframework.security.config.Customizer.withDefaults())
+                        .referrerPolicy(referrer -> referrer.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(permissions -> permissions.policy("camera=(), microphone=(), geolocation=()"))
+                )
+                .sessionManagement(session -> session
+                        .sessionFixation().migrateSession()
+                        .maximumSessions(2)
                 )
                 .authorizeHttpRequests(auth -> auth
                         // 1. Recursos Estáticos Públicos
