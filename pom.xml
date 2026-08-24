@@ -13,7 +13,7 @@
     <artifactId>demo</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>demo</name>
-    <description>CorpHub - Portal Corporativo e Intranet</description>
+    <description>IntraHub - Portal Corporativo e Intranet</description>
 
     <properties>
         <java.version>17</java.version>

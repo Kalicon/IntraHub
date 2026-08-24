@@ -37,7 +37,7 @@ public class SetupDataLoader implements CommandLineRunner {
             adminProfile.setCargo("Gestão TI");
             adminProfile.setSetor("TI");
             adminProfile.setRamal("0000");
-            adminProfile.setEmail("ti@corphub.com");
+            adminProfile.setEmail("ti@intrahub.com");
             adminProfile.setAtivo(true);
             adminProfile = funcionarioRepository.save(adminProfile);
 

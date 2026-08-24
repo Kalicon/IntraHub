@@ -14,7 +14,7 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     // E-mail que receberá os chamados e solicitações administrativas
-    @Value("${app.mail.admin-destination:admin@corphub.com}")
+    @Value("${app.mail.admin-destination:admin@intrahub.com}")
     private String emailDestinoAdmin;
 
     // E-mail que aparecerá como remetente
