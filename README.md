@@ -1,5 +1,10 @@
 # IntraHub — Portal Corporativo e Intranet Integrada
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Java 17](https://img.shields.io/badge/Java-17%20LTS-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Security 6](https://img.shields.io/badge/Spring%20Security-6-blue.svg)](https://spring.io/projects/spring-security)
+
 Plataforma corporativa desenvolvida em Java 17 e Spring Boot 3 para centralização de fluxos operacionais, automação de processos internos e gestão com rastreabilidade de conformidade (compliance). O sistema atende a requisitos enterprise como replicação em lote de escalas, controle de concorrência em reservas de recursos, canal confidencial de ouvidoria blindado e trilha estruturada de auditoria.
 
 ---
@@ -111,4 +116,4 @@ O sistema inicializa automaticamente dados de demonstração via `SetupDataLoade
 
 ## Licença
 
-Este projeto é disponibilizado para fins acadêmicos e de portfólio profissional.
+Este projeto é open-source e está licenciado sob os termos da [Licença MIT](LICENSE).
